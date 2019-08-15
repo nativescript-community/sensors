@@ -1,0 +1,11 @@
+{
+  "android": {
+    "maxLogcatObjectSize": 2048,
+    "markingMode": "none",
+    "v8Flags": "--expose_gc"
+  },
+  "main": "main",
+  "discardUncaughtJsExceptions":true,
+  "name": "com.nativescript.sensorsdemo",
+  "version": "1.0.0"
+}
