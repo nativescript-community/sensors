@@ -46,9 +46,7 @@ function handleAVWXResut(result: AVWXResult) {
 
 export function getAirportPressure(airport: string) {
     const httpModule = require('tns-core-modules/http') as typeof httpModuleDef;
-    console.log('getAirportPressure', airport);
     return httpModule.getJSON<AVWXResult>(`https://avwx.rest/api/metar/${airport}?options=info&format=json&onfail=cache`).then(result => {
-        console.log('getAirportPressure done ', result);
 
         // returned pressure is in inHg
         if (!result.altimeter) {
@@ -58,10 +56,8 @@ export function getAirportPressure(airport: string) {
     });
 }
 export function getAirportPressureAtLocation(lat: number, lon: number) {
-    console.log('getAirportPressureAtLocation', lat, lon);
     const httpModule = require('tns-core-modules/http') as typeof httpModuleDef;
     return httpModule.getJSON<AVWXResult>(`https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`).then(result => {
-        console.log('getAirportPressure done ', result);
 
         // returned pressure is in inHg
         if (!result.altimeter) {

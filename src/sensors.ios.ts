@@ -40,7 +40,6 @@ export const ACCURACY_LOW = CMMagneticFieldCalibrationAccuracy.Low;
 export const ACCURACY_UNCALIBRATED = CMMagneticFieldCalibrationAccuracy.Uncalibrated;
 
 export function isSensorAvailable(sensor: SensorType) {
-    console.log('isSensorAvailable', sensor);
     switch (sensor) {
         case 'accelerometer':
             return getMotionManager().accelerometerAvailable;
@@ -199,11 +198,9 @@ export function startListeningForSensor(sensor: SensorType, listener: Function, 
         }
         case 'barometer': {
             return perms.request('motion').then(r => {
-                console.log('barometer motion permission request', r);
                 if (r === 'authorized') {
                     const altitudeManager = getAltitudeManager();
                     // altitudeManager.update = updateInterval / 1000;
-                    console.log('altitudeManager startRelativeAltitudeUpdatesToQueueWithHandler', altitudeManager, CMAltimeter.authorizationStatus);
                     altitudeManager.startRelativeAltitudeUpdatesToQueueWithHandler(motionQueue, onDeviceAltitude);
                     return true;
                 }
@@ -242,7 +239,6 @@ export function startListeningForSensor(sensor: SensorType, listener: Function, 
             return Promise.resolve(false);
         }
     }
-    console.log('startListeningForSensor', sensor, updateInterval, maxReportLatency);
     listeners[sensor] = listeners[sensor] || [];
 
     listeners[sensor].push(listener);

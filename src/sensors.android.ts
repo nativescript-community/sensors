@@ -100,7 +100,6 @@ export function startListeningForSensor(sensor: SensorType, listener: Function, 
             listener(androidHashMapToJson(data), event);
         }
     });
-    console.log('startListeningForSensor', sensor, updateInterval, maxReportLatency, androidListener);
     const result = getSensorManager().addListenerForSensor(sensor, androidListener, updateInterval, maxReportLatency);
     if (result) {
         listeners[sensor] = listeners[sensor] || { jsListeners: [], androidListeners: [] };
@@ -116,7 +115,6 @@ export function stopListeningForSensor(sensor: SensorType, listener: Function) {
         const index = listeners[sensor].jsListeners.indexOf(listener);
         if (index !== -1) {
             const androidListener = listeners[sensor].androidListeners[index];
-            console.log('stopSensor', sensor, androidListener);
             if (androidListener) {
                 getSensorManager().removeListenerForSensor(sensor, androidListener);
             }

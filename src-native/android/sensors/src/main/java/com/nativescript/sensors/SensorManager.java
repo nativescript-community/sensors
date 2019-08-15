@@ -132,7 +132,7 @@ public class SensorManager implements SensorEventListener {
         HandlerThread mSensorThread = new HandlerThread("Nativescript Sensosr Thread", Process.THREAD_PRIORITY_BACKGROUND);
         mSensorThread.start();
         mSensorHandler = new Handler(mSensorThread.getLooper()); // Blocks until looper is prepared
-        Log.d(TAG, "SensorManager HandlerThread: " + mSensorThread);
+        // Log.d(TAG, "SensorManager HandlerThread: " + mSensorThread);
     }
 
 
@@ -376,7 +376,7 @@ public class SensorManager implements SensorEventListener {
                 }
                 break;
         }
-        Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
+        // Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
         return result;
     }
 
@@ -447,11 +447,11 @@ public class SensorManager implements SensorEventListener {
                 startSteps = 0;
                 steperStartTime = (new Date()).getTime();
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " + defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
-            } else {
-                Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
-            }
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " + defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
+            // } else {
+                // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
+            // }
 
             // calling multiple register on the same sensor will fail
             boolean didRegister = mRegisteredSensors.containsKey(sensor);
@@ -469,11 +469,11 @@ public class SensorManager implements SensorEventListener {
                 }
                 return defaultSensor;  // YAY SENSOR REGISTERED
             } else {
-                Log.d(TAG, "SensorManager failed to registerListener for type " + sensor);
+                // Log.d(TAG, "SensorManager failed to registerListener for type " + sensor);
                 return null;
             }
         } else {
-            Log.d(TAG, "SensorManager unable to get the default sensor for type: " + sensor);
+            // Log.d(TAG, "SensorManager unable to get the default sensor for type: " + sensor);
             return null; // BOO SENSOR NOT REGISTERED
         }
     }
@@ -496,7 +496,7 @@ public class SensorManager implements SensorEventListener {
         }
         if (shouldReallyStop) {
             Sensor defaultSensor = mSensorManager.getDefaultSensor(sensor);
-            Log.d(TAG, "stopSensor " + sensor + ", " + eventProperty(sensor) + ", " + defaultSensor);
+            // Log.d(TAG, "stopSensor " + sensor + ", " + eventProperty(sensor) + ", " + defaultSensor);
 
             if (defaultSensor != null) {
                 mSensorManager.unregisterListener(this, defaultSensor);
