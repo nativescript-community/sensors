@@ -1,7 +1,9 @@
 dependencies:
   '@tweenjs/tween.js': 17.4.0
   akylas-nativescript-vue: 2.1.14
+  dateformat: 3.0.3
   nativescript-collectionview: 1.0.25
+  nativescript-gps: 'link:../../../../../../usr/local/pnpm-global/node_modules/nativescript-gps'
   nativescript-sensors: 'link:../plugin'
   nativescript-vue: 2.4.0
   source-map-support: 0.5.13
@@ -796,7 +798,7 @@ packages:
       mkdirp: 0.5.1
       move-concurrently: 1.0.1
       promise-inflight: 1.0.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       ssri: 5.3.0
       unique-filename: 1.1.1
       y18n: 4.0.0
@@ -815,7 +817,7 @@ packages:
       mkdirp: 0.5.1
       move-concurrently: 1.0.1
       promise-inflight: 1.0.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       ssri: 6.0.1
       unique-filename: 1.1.1
       y18n: 4.0.0
@@ -835,7 +837,7 @@ packages:
       mkdirp: 0.5.1
       move-concurrently: 1.0.1
       promise-inflight: 1.0.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       ssri: 6.0.1
       unique-filename: 1.1.1
       y18n: 4.0.0
@@ -971,7 +973,7 @@ packages:
       integrity: sha512-qOhPa/Fj7s6TY8H8esGu5QNpMMQxz79h+urzrNYN6mn+9BnxlDGf5QZ+XeCDsxSjPqsSR56XOZOJmpeurnLMeg==
   /clean-webpack-plugin/1.0.1:
     dependencies:
-      rimraf: 2.7.0
+      rimraf: 2.7.1
     dev: true
     resolution:
       integrity: sha512-gvwfMsqu3HBgTVvaBa1H3AZKO03CHpr5uP92SPIktP3827EovAitwW+1xoqXyTxCuXnLYpMHG5ytS4AoukHDWA==
@@ -1136,7 +1138,7 @@ packages:
       fs-write-stream-atomic: 1.0.10
       iferr: 0.1.5
       mkdirp: 0.5.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       run-queue: 1.0.3
     dev: true
     resolution:
@@ -1304,6 +1306,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-6vQ5/U1ISK105cx9vvIAZyueNFs=
+  /dateformat/3.0.3:
+    dev: false
+    resolution:
+      integrity: sha512-jyCETtSl3VMZMWeRo7iY1FL19ges1t55hMo5yaam4Jrsm5EPL89UQkoQRyiI+Yf4k8r2ZpdngkV8hr1lIdjb3Q==
   /de-indent/1.0.2:
     dev: true
     resolution:
@@ -1915,7 +1921,7 @@ packages:
       graceful-fs: 4.2.2
       inherits: 2.0.4
       mkdirp: 0.5.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
     dev: true
     engines:
       node: '>=0.6'
@@ -2955,7 +2961,7 @@ packages:
       copy-concurrently: 1.0.5
       fs-write-stream-atomic: 1.0.10
       mkdirp: 0.5.1
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       run-queue: 1.0.3
     dev: true
     resolution:
@@ -3089,7 +3095,7 @@ packages:
       npmlog: 4.1.2
       osenv: 0.1.5
       request: 2.88.0
-      rimraf: 2.7.0
+      rimraf: 2.7.1
       semver: 5.3.0
       tar: 2.2.2
       which: 1.3.1
@@ -3961,13 +3967,13 @@ packages:
     dev: true
     resolution:
       integrity: sha1-MIBqhBNCtUUQqkEQhQzUhTQUSqc=
-  /rimraf/2.7.0:
+  /rimraf/2.7.1:
     dependencies:
       glob: 7.1.4
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-4Liqw7ccABzsWV5BzeZeGRSq7KWIgQYzOcmRDEwSX4WAawlQpcAFXZ1Kid72XYrjSnK5yxOS6Gez/iGusYE/Pw==
+      integrity: sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==
   /ripemd160/2.0.2:
     dependencies:
       hash-base: 3.0.4
@@ -5006,7 +5012,6 @@ packages:
       tapable: 1.1.3
       terser-webpack-plugin: 1.4.1_webpack@4.27.1
       watchpack: 1.6.0
-      webpack: 4.27.1_webpack@4.27.1
       webpack-sources: 1.4.3
     dev: true
     engines:
@@ -5144,9 +5149,11 @@ specifiers:
   akylas-nativescript-vue: ^2.1.14
   akylas-nativescript-vue-template-compiler: ~2.1.14
   babel-loader: ~8.0.6
+  dateformat: ^3.0.3
   fork-ts-checker-webpack-plugin: ^1.5.0
   nativescript-collectionview: ^1.0.25
   nativescript-dev-webpack: 1.0.3
+  nativescript-gps: 1.2.12
   nativescript-sensors: 'file:../plugin'
   nativescript-vue: ^2.4.0
   node-sass: ^4.12.0

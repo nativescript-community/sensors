@@ -19,6 +19,7 @@
         "dateformat": "^3.0.3",
         "nativescript-collectionview": "^1.0.25",
         "nativescript-sensors": "file:../plugin",
+        "nativescript-gps": "1.2.12",
         "nativescript-vue": "^2.4.0",
         "source-map-support": "^0.5.13",
         "tns-core-modules": "6.0.6"
