@@ -31,13 +31,14 @@ public class SensorManager implements SensorEventListener {
     private static final String PROPERTY_USER = "user";
 
 
+    private static final String EVENT_LINEAR_ACCELERATION = "linearAccelerationt";
     private static final String EVENT_ACC = "accelerometer";
     private static final String EVENT_GYRO = "gyroscope";
     private static final String EVENT_ORIENTATION = "orientation";
     private static final String EVENT_MAG = "magnetometer";
     private static final String EVENT_MOTION = "motion";
     private static final String EVENT_ROTATION = "rotation";
-    private static final String EVENT_PRESSURE = "pressure";
+    private static final String EVENT_PRESSURE = "barometer";
     private static final String EVENT_PROXIMITY = "proximity";
     private static final String EVENT_STATIONARY_DETECT = "stationary";
     private static final String EVENT_STEP_COUNTER = "stepCounter";
@@ -79,72 +80,13 @@ public class SensorManager implements SensorEventListener {
 
     private static String TAG = "SensorManager";
 
-    // public class HeavyDataBag {
-    //     /**
-    //     * Sensor type as string.
-    //     */
-    //     public String sensor;
-
-    //     /**
-    //     * Sensor event timestamp.
-    //     */
-    //     public long timestamp;
-
-    //     /**
-    //     * Returns the seconds since Epoch
-    //     */
-    //     public long time = System.currentTimeMillis() / 1000;
-
-    //     public HashMap data;
-
-    //     HeavyDataBag() {
-    //         // no-args constructor
-    //     }
-    // }
-    // public class LiteDataBag {
-
-    //   /**
-    //   * Sensor type as int.
-    //   */
-    //   public int s;
-
-    //   /**
-    //   * Sensor event timestamp.
-    //   */
-    //   public long ts;
-
-    //   /**
-    //   * Returns the seconds since Epoch
-    //   */
-    //   public long t = System.currentTimeMillis() / 1000;
-
-    //   /**
-    //   * Hashmap for storing the sensor data.
-    //   */
-    //   public HashMap d;
-
-    //   LiteDataBag() {
-    //       // no-args constructor
-    //   }
-    // }
-
-//    public interface SensorManagerListener extends SensorEventListener {
-//        void onSensorChanged(String jsonData);
-//
-//        void onAccuracyChanged(Sensor sensor, int accuracy);
-//    }
-
     public interface SensorManagerEventListener {
         void onEventData(HashMap data, String event);
 
     }
 
-
     private Handler mSensorHandler;
-    //    private SensorManagerListener mListener;
     private android.hardware.SensorManager mSensorManager;
-
-    // private boolean useLiteDataBagForSensorData;
 
     private HashMap<Integer, Integer> mRegisteredSensors = new HashMap<>();
     private List<String> motionSensors = new ArrayList<>(
@@ -168,6 +110,9 @@ public class SensorManager implements SensorEventListener {
     private float[] filteredAcc = new float[3];
     private float[] filteredMag = new float[3];
 
+    private long startSteps = 0;
+    private long steperStartTime = 0;
+
     private int motionRealNbSensors = motionSensors.size() + 1;
 
     private HashMap<Integer, float[]> mCurrentValues = new HashMap<Integer, float[]>();
@@ -180,21 +125,14 @@ public class SensorManager implements SensorEventListener {
      * Constructor. Since the class does not extend Application or Activity, we need
      * to context of the running process/app.
      */
-    public SensorManager(Context ctx, boolean liteData) {
-        // if liteData argument is provided then the sensor event data will use the LiteDataBag
-        // if not then we use the HeavyDataBag to return in the sensor changed events
-        // useLiteDataBagForSensorData = liteData;
-        // Log.d(TAG, "Constructor liteData argument value: " + useLiteDataBagForSensorData);
-
+    public SensorManager(Context context) {
         // Get the SensorManager
-        mSensorManager = (android.hardware.SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
-        Log.d(TAG, "SensorManager: " + this.mSensorManager);
+        mSensorManager = (android.hardware.SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         // Setup our background thread for sensors
-        HandlerThread mSensorThread = new HandlerThread("XSensor Thread", Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread mSensorThread = new HandlerThread("Nativescript Sensosr Thread", Process.THREAD_PRIORITY_BACKGROUND);
         mSensorThread.start();
         mSensorHandler = new Handler(mSensorThread.getLooper()); // Blocks until looper is prepared
         Log.d(TAG, "SensorManager HandlerThread: " + mSensorThread);
-        Log.d(TAG, "SensorManager Handler: " + mSensorHandler);
     }
 
 
@@ -353,16 +291,20 @@ public class SensorManager implements SensorEventListener {
     protected List<Integer> getActualSensors(String sensorType) {
         List<Integer> result = new ArrayList<>();
         switch (sensorType) {
-            case EVENT_ACC:
+            case EVENT_LINEAR_ACCELERATION:
                 result.add(
                         Sensor.TYPE_LINEAR_ACCELERATION);
                 result.add(Sensor.TYPE_GRAVITY);
+                break;
+            case EVENT_ACC:
+                result.add(Sensor.TYPE_ACCELEROMETER);
                 break;
             case EVENT_GYRO:
                 result.add(Sensor.TYPE_GYROSCOPE);
                 break;
             case EVENT_MAG:
                 result.add(Sensor.TYPE_MAGNETIC_FIELD);
+                break;
             case EVENT_ROTATION:
                 result.add(Sensor.TYPE_ROTATION_VECTOR);
                 break;
@@ -382,8 +324,34 @@ public class SensorManager implements SensorEventListener {
                 result.add(
                         Sensor.TYPE_HEART_RATE);
                 break;
+            case EVENT_STEP_DETECTOR:
+                result.add(
+                        Sensor.TYPE_STEP_DETECTOR);
+                break;
+            case EVENT_STEP_COUNTER:
+                result.add(
+                        Sensor.TYPE_STEP_COUNTER);
+                break;
+            case EVENT_TEMPERATURE:
+                result.add(
+                        Sensor.TYPE_AMBIENT_TEMPERATURE);
+                break;
+            case EVENT_HUMIDITY:
+                result.add(
+                        Sensor.TYPE_RELATIVE_HUMIDITY);
+                break;
+            case EVENT_STATIONARY_DETECT:
+                result.add(
+                        Sensor.TYPE_STATIONARY_DETECT);
+                break;
             case EVENT_ORIENTATION:
                 result.add(Sensor.TYPE_ORIENTATION);
+                break;
+            case EVENT_LIGHT:
+                result.add(Sensor.TYPE_LIGHT);
+                break;
+            case EVENT_GRAVITY:
+                result.add(Sensor.TYPE_GRAVITY);
                 break;
             case EVENT_MOTION:
                 if (motionSensors.contains(EVENT_MAG)) {
@@ -406,7 +374,9 @@ public class SensorManager implements SensorEventListener {
                     result.add(Sensor.TYPE_MAGNETIC_FIELD);
 
                 }
+                break;
         }
+        Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
         return result;
     }
 
@@ -442,11 +412,12 @@ public class SensorManager implements SensorEventListener {
     public boolean hasSensor(String sensorType) {
         final List<Integer> sensors = getActualSensors(sensorType);
         for (Integer s : sensors) {
-            if (mSensorManager.getDefaultSensor(s) != null) {
-                return false;
+            Sensor defaultSensor = mSensorManager.getDefaultSensor(s);
+            if (defaultSensor != null) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
@@ -472,6 +443,10 @@ public class SensorManager implements SensorEventListener {
         Sensor defaultSensor = mSensorManager.getDefaultSensor(sensor);
         // if we have the sensor then register the listener
         if (defaultSensor != null) {
+            if (sensor == Sensor.TYPE_STEP_COUNTER) {
+                startSteps = 0;
+                steperStartTime = (new Date()).getTime();
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " + defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
             } else {
@@ -646,6 +621,53 @@ public class SensorManager implements SensorEventListener {
                 sensordata.put(PROPERTY_Z, z);
                 break;
             }
+            case Sensor.TYPE_GRAVITY: {
+                sensordata.put(PROPERTY_X, -values[0]);
+                sensordata.put(PROPERTY_Y, -values[1]);
+                sensordata.put(PROPERTY_Z, -values[2]);
+                break;
+            }
+            case Sensor.TYPE_STEP_COUNTER: {
+                if (startSteps == 0) {
+                  startSteps = (long)values[0];
+                }
+                sensordata.put("steps", values[0] - startSteps);
+                sensordata.put("startDate", steperStartTime);
+                sensordata.put("endDate", (new Date()).getTime());
+                break;
+            }
+            case Sensor.TYPE_PROXIMITY: {
+                sensordata.put("proximity", values[0]);
+                break;
+            }
+            case Sensor.TYPE_HEART_RATE: {
+                sensordata.put("heartRate", values[0]);
+                break;
+            }
+            case Sensor.TYPE_HEART_BEAT: {
+                sensordata.put("hearBeat", values[0]);
+                break;
+            }
+            case Sensor.TYPE_LIGHT: {
+                sensordata.put("level", values[0]);
+                break;
+            }
+            case Sensor.TYPE_RELATIVE_HUMIDITY: {
+                sensordata.put("humidity", values[0]); // Relative ambient air humidity in percent
+                break;
+            }
+            case Sensor.TYPE_AMBIENT_TEMPERATURE: {
+                sensordata.put("temperature", values[0]); // ambient (room) temperature in degree Celsius
+                break;
+            }
+            case Sensor.TYPE_STATIONARY_DETECT: {
+                sensordata.put("stationary", values[0]); 
+                break;
+            }
+            case Sensor.TYPE_LOW_LATENCY_OFFBODY_DETECT: {
+                sensordata.put("state", values[0]); 
+                break;
+            }
             case Sensor.TYPE_PRESSURE: {
                 float currentPressure = values[0];
                 float altitudeDifference = 0;
@@ -743,10 +765,8 @@ public class SensorManager implements SensorEventListener {
             event.timestamp = myTimeReference +
                     Math.round((event.timestamp - sensorTimeReference) / 1000000.0);
             long newSensorEventTimestamp = event.timestamp;// MICRO
+        //    Log.d(TAG, "onSensorChanged " + sensorType + ", " + type + ", " + newSensorEventTimestamp);
 
-
-//            Log.d(TAG, "Motion go event " + sensorType + ", " + type);
-//            Log.d(TAG, "test timestamp " + newSensorEventTimestamp + ", " + event.timestamp + ", " + System.nanoTime() + ", " + System.currentTimeMillis() + ", " + (new Date()).getTime());
             // SECONDS
             if (mListeners.containsKey(type)) {
 

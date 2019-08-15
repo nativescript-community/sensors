@@ -23,7 +23,7 @@ declare module com {
 				public addListenerForSensor(param0: string, param1: com.nativescript.sensors.SensorManager.SensorManagerEventListener, param2: number, param3: number): boolean;
 				public flush(): boolean;
 				public hasEvenListener(param0: string): boolean;
-				public constructor(param0: globalAndroid.content.Context, param1: boolean);
+				public constructor(param0: globalAndroid.content.Context);
 			}
 			export module SensorManager {
 				export class SensorManagerEventListener extends java.lang.Object {

@@ -1,6 +1,7 @@
-export const SENSORS = ['magnetometer', 'accelerometer', 'gyroscope', 'rotation', 'orientation', 'motion', 'barometer'] as const;
+export const SENSORS = ['magnetometer', 'accelerometer', 'gyroscope', 'rotation', 'orientation', 'motion', 'barometer', 'stepCounter', 'floorCounter', 'distance', 'pace', 'cadence'] as const;
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
+export * from './sensors.common';
 
 import * as perms from 'nativescript-perms';
 
@@ -25,6 +26,13 @@ function getAltitudeManager() {
     }
     return altitudeManager;
 }
+let pedometer: CMPedometer;
+function getPedometer() {
+    if (!pedometer) {
+        pedometer = CMPedometer.new();
+    }
+    return pedometer;
+}
 
 export const ACCURACY_HIGH = CMMagneticFieldCalibrationAccuracy.High;
 export const ACCURACY_MEDIUM = CMMagneticFieldCalibrationAccuracy.Medium;
@@ -46,6 +54,8 @@ export function isSensorAvailable(sensor: SensorType) {
             return getMotionManager().magnetometerAvailable;
         case 'gyroscope':
             return getMotionManager().gyroAvailable;
+        case 'stepCounter':
+            return CMPedometer.isStepCountingAvailable;
     }
     return false;
 }
@@ -160,6 +170,17 @@ function onDeviceGyro(data: CMGyroData, error: NSError) {
     }
 }
 
+function onPedometer(data: CMPedometerData, error: NSError) {
+    if (listeners['stepCounter']) {
+        const event = {
+            startDate: data.startDate,
+            endDate: data.endDate,
+            steps: data.numberOfSteps
+        };
+        fireEvent('stepCounter', event);
+    }
+}
+
 export function startListeningForSensor(sensor: SensorType, listener: Function, updateInterval: number, maxReportLatency = 0) {
     if (!isSensorAvailable(sensor)) {
         throw new Error(`sensor not available ${sensor}`);
@@ -210,6 +231,13 @@ export function startListeningForSensor(sensor: SensorType, listener: Function, 
             motionManager.startGyroUpdatesToQueueWithHandler(motionQueue, onDeviceGyro);
             break;
         }
+        case 'stepCounter': {
+            const pedometer = getPedometer();
+            // pedometer.update = updateInterval / 1000;
+            const fromDate = new Date();
+            pedometer.startPedometerUpdatesFromDateWithHandler(fromDate, onPedometer);
+            break;
+        }
         default: {
             return Promise.resolve(false);
         }
@@ -258,6 +286,11 @@ export function stopListeningForSensor(sensor: SensorType, listener: Function) {
                 case 'gyroscope': {
                     const motionManager = getMotionManager();
                     motionManager.startGyroUpdates();
+                    break;
+                }
+                case 'stepCounter': {
+                    const pedometer = getPedometer();
+                    pedometer.stopPedometerUpdates();
                     break;
                 }
             }

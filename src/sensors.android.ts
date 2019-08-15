@@ -2,6 +2,8 @@ import { ad } from 'tns-core-modules/utils/utils';
 import lazy from 'tns-core-modules/utils/lazy';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 
+export * from './sensors.common';
+
 export const SENSORS = [
     'magnetometer',
     'accelerometer',
@@ -24,10 +26,14 @@ export const SENSORS = [
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
 
+
+export function getAltitude(pressure: number, airportPressure: number) {
+    return android.hardware.SensorManager.getAltitude(airportPressure, pressure);
+}
 function getSensorManager() {
     if (sensorManager == null) {
         const context: android.content.Context = ad.getApplicationContext();
-        sensorManager = new com.nativescript.sensors.SensorManager(context, false);
+        sensorManager = new com.nativescript.sensors.SensorManager(context);
     }
     return sensorManager;
 }
