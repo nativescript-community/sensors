@@ -29,9 +29,10 @@ public class SensorManager implements SensorEventListener {
     private static final String PROPERTY_GRAVITY = "gravity";
     private static final String PROPERTY_TIMESTAMP = "timestamp";
     private static final String PROPERTY_USER = "user";
+    private static final String PROPERTY_RAW = "raw";
 
 
-    private static final String EVENT_LINEAR_ACCELERATION = "linearAccelerationt";
+    private static final String EVENT_LINEAR_ACCELERATION = "linearAcceleration";
     private static final String EVENT_ACC = "accelerometer";
     private static final String EVENT_GYRO = "gyroscope";
     private static final String EVENT_ORIENTATION = "orientation";
@@ -539,28 +540,34 @@ public class SensorManager implements SensorEventListener {
                 float y = values[1];
                 float z = values[2];
                 // float[] gravs = mCurrentValues.get(Sensor.TYPE_GRAVITY);
-                final float alpha = (float) 0.8;
-                x /= -STANDARD_GRAVITY;
-                y /= -STANDARD_GRAVITY;
-                z /= -STANDARD_GRAVITY;
+                // final float alpha = (float) 0.8;
+                // x /= -STANDARD_GRAVITY;
+                // y /= -STANDARD_GRAVITY;
+                // z /= -STANDARD_GRAVITY;
 
-                gravity[0] = alpha * gravity[0] + (1 - alpha) * x;
-                gravity[1] = alpha * gravity[1] + (1 - alpha) * y;
-                gravity[2] = alpha * gravity[2] + (1 - alpha) * z;
+                // gravity[0] = alpha * gravity[0] + (1 - alpha) * x;
+                // gravity[1] = alpha * gravity[1] + (1 - alpha) * y;
+                // gravity[2] = alpha * gravity[2] + (1 - alpha) * z;
 
                 sensordata.put(PROPERTY_X, x);
                 sensordata.put(PROPERTY_Y, y);
                 sensordata.put(PROPERTY_Z, z);
-                HashMap useracc = new HashMap();
-                useracc.put(PROPERTY_X, x - gravity[0]);
-                useracc.put(PROPERTY_Y, y - gravity[1]);
-                useracc.put(PROPERTY_Z, z - gravity[2]);
-                HashMap gacc = new HashMap();
-                gacc.put(PROPERTY_X, gravity[0]);
-                gacc.put(PROPERTY_Y, gravity[1]);
-                gacc.put(PROPERTY_Z, gravity[2]);
-                sensordata.put(PROPERTY_USER, useracc);
-                sensordata.put(PROPERTY_GRAVITY, gacc);
+                // HashMap useracc = new HashMap();
+                // useracc.put(PROPERTY_X, x - gravity[0]);
+                // useracc.put(PROPERTY_Y, y - gravity[1]);
+                // useracc.put(PROPERTY_Z, z - gravity[2]);
+                // HashMap gacc = new HashMap();
+                // gacc.put(PROPERTY_X, gravity[0]);
+                // gacc.put(PROPERTY_Y, gravity[1]);
+                // gacc.put(PROPERTY_Z, gravity[2]);
+
+                // HashMap raw = new HashMap();
+                // raw.put(PROPERTY_X, values[0]);
+                // raw.put(PROPERTY_Y, values[1]);
+                // raw.put(PROPERTY_Z, values[2]);
+                // sensordata.put(PROPERTY_RAW, raw);
+                // sensordata.put(PROPERTY_USER, useracc);
+                // sensordata.put(PROPERTY_GRAVITY, gacc);
                 break;
             }
             case Sensor.TYPE_LINEAR_ACCELERATION: {
@@ -589,6 +596,11 @@ public class SensorManager implements SensorEventListener {
                 gacc.put(PROPERTY_X, gx);
                 gacc.put(PROPERTY_Y, gy);
                 gacc.put(PROPERTY_Z, gz);
+                HashMap raw = new HashMap();
+                raw.put(PROPERTY_X, values[0]);
+                raw.put(PROPERTY_Y, values[1]);
+                raw.put(PROPERTY_Z, values[2]);
+                sensordata.put(PROPERTY_RAW, raw);
                 sensordata.put(PROPERTY_USER, useracc);
                 sensordata.put(PROPERTY_GRAVITY, gacc);
                 break;
@@ -690,7 +702,7 @@ public class SensorManager implements SensorEventListener {
                 sensordata.put(PROPERTY_ACCURACY, currentMagnetometerAccuracy);
                 if (computeRotationMatrix) {
                     if (mRotationMatrix == null) {
-                        mRotationMatrix = new float[9];
+                        mRotationMatrix = new float[16];
                     }
                     android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix,
                             values);
@@ -872,7 +884,7 @@ public class SensorManager implements SensorEventListener {
                     data.put("quaternion", quat);
                     if (computeRotationMatrix) {
                         if (mRotationMatrix == null) {
-                            mRotationMatrix = new float[9];
+                            mRotationMatrix = new float[16];
                         }
                         android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix, quat);
                         data.put("rotationMatrix", mRotationMatrix);

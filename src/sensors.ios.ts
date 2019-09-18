@@ -1,4 +1,18 @@
-export const SENSORS = ['magnetometer', 'accelerometer', 'gyroscope', 'rotation', 'orientation', 'motion', 'barometer', 'stepCounter', 'floorCounter', 'distance', 'pace', 'cadence'] as const;
+export const SENSORS = [
+    'linearAcceleration',
+    'magnetometer',
+    'accelerometer',
+    'gyroscope',
+    'rotation',
+    'orientation',
+    'motion',
+    'barometer',
+    'stepCounter',
+    'floorCounter',
+    'distance',
+    'pace',
+    'cadence'
+] as const;
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
 export * from './sensors.common';
@@ -10,6 +24,8 @@ const uptime = NSProcessInfo.processInfo.systemUptime;
 const nowTimeIntervalSince1970 = NSDate.date().timeIntervalSince1970;
 // Voila our offset
 const bootTimestamp = nowTimeIntervalSince1970 - uptime;
+
+const STANDARD_GRAVITY = 9.80665;
 
 let motionQueue: NSOperationQueue;
 let motionManager: CMMotionManager;
@@ -86,7 +102,7 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
             timestamp: realTimestamp,
             accuracy: data.magneticField.accuracy,
             quaternion: [quat.x, quat.y, quat.z, quat.w],
-            rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, rotation.m21, rotation.m22, rotation.m23, rotation.m31, rotation.m32, rotation.m33],
+            rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, 0, rotation.m21, rotation.m22, rotation.m23, 0, rotation.m31, rotation.m32, rotation.m33, 0, 0, 0, 0, 1],
             orientation: [currentAttitude.yaw, currentAttitude.pitch, currentAttitude.roll]
         };
         fireEvent('rotation', event);
@@ -115,10 +131,39 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
             orientation: [currentAttitude.yaw, currentAttitude.pitch, currentAttitude.roll],
             magnetometer: [data.magneticField.field.x, data.magneticField.field.y, data.magneticField.field.z],
             quaternion: [quat.x, quat.y, quat.z, quat.w],
-            rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, rotation.m21, rotation.m22, rotation.m23, rotation.m31, rotation.m32, rotation.m33],
+            rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, 0, rotation.m21, rotation.m22, rotation.m23, 0, rotation.m31, rotation.m32, rotation.m33, 0, 0, 0, 0, 1],
             gyroscope: [data.rotationRate.x, data.rotationRate.y, data.rotationRate.z]
         };
         fireEvent('motion', event);
+    }
+    if (listeners['linearAcceleration']) {
+        const quat = currentAttitude.quaternion;
+        const rotation = currentAttitude.rotationMatrix;
+        const event = {
+            timestamp: realTimestamp,
+            accelerometer: {
+                gravity: {
+                    x: data.gravity.x,
+                    y: data.gravity.y,
+                    z: data.gravity.z
+                },
+                user: {
+                    x: data.userAcceleration.x,
+                    y: data.userAcceleration.y,
+                    z: data.userAcceleration.z
+                },
+                raw: {
+                    x: data.userAcceleration.x * STANDARD_GRAVITY,
+                    y: data.userAcceleration.y * STANDARD_GRAVITY,
+                    z: data.userAcceleration.z * STANDARD_GRAVITY
+                },
+                x: data.gravity.x + data.userAcceleration.x,
+                y: data.gravity.y + data.userAcceleration.y,
+                z: data.gravity.z + data.userAcceleration.z
+            },
+            accuracy: data.magneticField.accuracy
+        };
+        fireEvent('linearAcceleration', event);
     }
 }
 function onDeviceAccelerometer(data: CMAccelerometerData, error: NSError) {
@@ -128,7 +173,12 @@ function onDeviceAccelerometer(data: CMAccelerometerData, error: NSError) {
             timestamp: realTimestamp,
             x: data.acceleration.x,
             y: data.acceleration.y,
-            z: data.acceleration.z
+            z: data.acceleration.z,
+            // raw: {
+            //     x: data.acceleration.x * STANDARD_GRAVITY,
+            //     y: data.acceleration.y * STANDARD_GRAVITY,
+            //     z: data.acceleration.z * STANDARD_GRAVITY
+            // },
         };
         fireEvent('accelerometer', event);
     }
@@ -180,118 +230,132 @@ function onPedometer(data: CMPedometerData, error: NSError) {
     }
 }
 
-export function startListeningForSensor(sensor: SensorType, listener: Function, updateInterval: number, maxReportLatency = 0) {
-    if (!isSensorAvailable(sensor)) {
-        throw new Error(`sensor not available ${sensor}`);
+export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0) {
+    if (!Array.isArray(sensors)) {
+        sensors = [sensors];
     }
-    if (!motionQueue) {
-        motionQueue = NSOperationQueue.new();
-    }
-    switch (sensor) {
-        case 'accelerometer': {
-            const motionManager = getMotionManager();
-            motionManager.accelerometerUpdateInterval = updateInterval / 1000;
-            if (!motionManager.accelerometerActive) {
-                motionManager.startAccelerometerUpdatesToQueueWithHandler(motionQueue, onDeviceAccelerometer);
+
+    return Promise.all(
+        sensors.map(sensor => {
+            if (!isSensorAvailable(sensor)) {
+                throw new Error(`sensor not available ${sensor}`);
             }
-            break;
-        }
-        case 'barometer': {
-            return perms.request('motion').then(r => {
-                if (r === 'authorized') {
-                    const altitudeManager = getAltitudeManager();
-                    // altitudeManager.update = updateInterval / 1000;
-                    altitudeManager.startRelativeAltitudeUpdatesToQueueWithHandler(motionQueue, onDeviceAltitude);
-                    return true;
-                }
-                return false;
-            });
-        }
-        case 'orientation':
-        case 'motion':
-        case 'rotation': {
-            const motionManager = getMotionManager();
-            motionManager.deviceMotionUpdateInterval = updateInterval / 1000;
-            motionManager.showsDeviceMovementDisplay = true;
-            motionManager.startDeviceMotionUpdatesUsingReferenceFrameToQueueWithHandler(CMAttitudeReferenceFrame.XArbitraryCorrectedZVertical, motionQueue, onDeviceMotion);
-            break;
-        }
-        case 'magnetometer': {
-            const motionManager = getMotionManager();
-            motionManager.magnetometerUpdateInterval = updateInterval / 1000;
-            motionManager.startMagnetometerUpdatesToQueueWithHandler(motionQueue, onDeviceMagnetometer);
-            break;
-        }
-        case 'gyroscope': {
-            const motionManager = getMotionManager();
-            motionManager.gyroUpdateInterval = updateInterval / 1000;
-            motionManager.startGyroUpdatesToQueueWithHandler(motionQueue, onDeviceGyro);
-            break;
-        }
-        case 'stepCounter': {
-            const pedometer = getPedometer();
-            // pedometer.update = updateInterval / 1000;
-            const fromDate = new Date();
-            pedometer.startPedometerUpdatesFromDateWithHandler(fromDate, onPedometer);
-            break;
-        }
-        default: {
-            return Promise.resolve(false);
-        }
-    }
-    listeners[sensor] = listeners[sensor] || [];
-
-    listeners[sensor].push(listener);
-    return Promise.resolve(true);
-}
-
-export function stopListeningForSensor(sensor: SensorType, listener: Function) {
-    if (sensor && listeners[sensor]) {
-        const index = listeners[sensor].indexOf(listener);
-        if (index !== -1) {
-            listeners[sensor].splice(index, 1);
-        }
-        if (!listeners[sensor] || listeners[sensor].length === 0) {
-            delete listeners[sensor];
+            if (!motionQueue) {
+                motionQueue = NSOperationQueue.new();
+            }
             switch (sensor) {
                 case 'accelerometer': {
-                    if (motionManager.accelerometerActive) {
-                        motionManager.stopAccelerometerUpdates();
+                    const motionManager = getMotionManager();
+                    motionManager.accelerometerUpdateInterval = updateInterval / 1000;
+                    if (!motionManager.accelerometerActive) {
+                        motionManager.startAccelerometerUpdatesToQueueWithHandler(motionQueue, onDeviceAccelerometer);
                     }
                     break;
                 }
                 case 'barometer': {
-                    const altitudeManager = getAltitudeManager();
-                    altitudeManager.stopRelativeAltitudeUpdates();
-                    break;
+                    return perms.request('motion').then(r => {
+                        if (r === 'authorized') {
+                            const altitudeManager = getAltitudeManager();
+                            // altitudeManager.update = updateInterval / 1000;
+                            altitudeManager.startRelativeAltitudeUpdatesToQueueWithHandler(motionQueue, onDeviceAltitude);
+                            return true;
+                        }
+                        return false;
+                    });
                 }
                 case 'orientation':
                 case 'motion':
                 case 'rotation': {
                     const motionManager = getMotionManager();
-                    if (!listeners['orientation'] && !listeners['motion'] && !listeners['rotation']) {
-                        motionManager.stopDeviceMotionUpdates();
-                    }
+                    motionManager.deviceMotionUpdateInterval = updateInterval / 1000;
+                    motionManager.showsDeviceMovementDisplay = true;
+                    motionManager.startDeviceMotionUpdatesUsingReferenceFrameToQueueWithHandler(CMAttitudeReferenceFrame.XArbitraryCorrectedZVertical, motionQueue, onDeviceMotion);
                     break;
                 }
                 case 'magnetometer': {
                     const motionManager = getMotionManager();
-                    motionManager.stopMagnetometerUpdates();
+                    motionManager.magnetometerUpdateInterval = updateInterval / 1000;
+                    motionManager.startMagnetometerUpdatesToQueueWithHandler(motionQueue, onDeviceMagnetometer);
                     break;
                 }
                 case 'gyroscope': {
                     const motionManager = getMotionManager();
-                    motionManager.startGyroUpdates();
+                    motionManager.gyroUpdateInterval = updateInterval / 1000;
+                    motionManager.startGyroUpdatesToQueueWithHandler(motionQueue, onDeviceGyro);
                     break;
                 }
                 case 'stepCounter': {
                     const pedometer = getPedometer();
-                    pedometer.stopPedometerUpdates();
+                    // pedometer.update = updateInterval / 1000;
+                    const fromDate = new Date();
+                    pedometer.startPedometerUpdatesFromDateWithHandler(fromDate, onPedometer);
                     break;
                 }
+                default: {
+                    return Promise.resolve(false);
+                }
             }
-        }
+            listeners[sensor] = listeners[sensor] || [];
+            listeners[sensor].push(listener);
+            return Promise.resolve(true);
+        })
+    );
+}
+
+export function stopListeningForSensor(sensors: SensorType | SensorType[], listener: Function) {
+    if (!Array.isArray(sensors)) {
+        sensors = [sensors];
     }
+    return Promise.all(
+        sensors.map(sensor => {
+            if (sensor && listeners[sensor]) {
+                const index = listeners[sensor].indexOf(listener);
+                if (index !== -1) {
+                    listeners[sensor].splice(index, 1);
+                }
+                if (!listeners[sensor] || listeners[sensor].length === 0) {
+                    delete listeners[sensor];
+                    switch (sensor) {
+                        case 'accelerometer': {
+                            if (motionManager.accelerometerActive) {
+                                motionManager.stopAccelerometerUpdates();
+                            }
+                            break;
+                        }
+                        case 'barometer': {
+                            const altitudeManager = getAltitudeManager();
+                            altitudeManager.stopRelativeAltitudeUpdates();
+                            break;
+                        }
+                        case 'orientation':
+                        case 'motion':
+                        case 'rotation': {
+                            const motionManager = getMotionManager();
+                            if (!listeners['orientation'] && !listeners['motion'] && !listeners['rotation']) {
+                                motionManager.stopDeviceMotionUpdates();
+                            }
+                            break;
+                        }
+                        case 'magnetometer': {
+                            const motionManager = getMotionManager();
+                            motionManager.stopMagnetometerUpdates();
+                            break;
+                        }
+                        case 'gyroscope': {
+                            const motionManager = getMotionManager();
+                            motionManager.startGyroUpdates();
+                            break;
+                        }
+                        case 'stepCounter': {
+                            const pedometer = getPedometer();
+                            pedometer.stopPedometerUpdates();
+                            break;
+                        }
+                    }
+                }
+            }
+        })
+    );
 }
 
 export function getAllavailableSensors() {
