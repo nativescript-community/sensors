@@ -293,8 +293,7 @@ public class SensorManager implements SensorEventListener {
         List<Integer> result = new ArrayList<>();
         switch (sensorType) {
             case EVENT_LINEAR_ACCELERATION:
-                result.add(
-                        Sensor.TYPE_LINEAR_ACCELERATION);
+                result.add(Sensor.TYPE_LINEAR_ACCELERATION);
                 result.add(Sensor.TYPE_GRAVITY);
                 break;
             case EVENT_ACC:
@@ -366,8 +365,7 @@ public class SensorManager implements SensorEventListener {
                     result.add(Sensor.TYPE_ORIENTATION);
                 }
                 if (motionSensors.contains(EVENT_ACC)) {
-                    result.add(
-                            Sensor.TYPE_LINEAR_ACCELERATION);
+                    result.add(Sensor.TYPE_LINEAR_ACCELERATION);
                     result.add(Sensor.TYPE_GRAVITY);
                 }
                 if (motionSensors.contains(EVENT_ROTATION)) {
@@ -377,7 +375,7 @@ public class SensorManager implements SensorEventListener {
                 }
                 break;
         }
-        // Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
+        Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
         return result;
     }
 
@@ -407,7 +405,7 @@ public class SensorManager implements SensorEventListener {
     }
 
     protected boolean isSensorRegistered(int sensor) {
-        return mRegisteredSensors.get(sensor) > 0;
+        return mRegisteredSensors.containsKey(sensor)  &&  mRegisteredSensors.get(sensor) > 0;
     }
 
     public boolean hasSensor(String sensorType) {
@@ -451,7 +449,7 @@ public class SensorManager implements SensorEventListener {
             // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " + defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
             // } else {
-                // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
+            Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
             // }
 
             // calling multiple register on the same sensor will fail
@@ -492,7 +490,7 @@ public class SensorManager implements SensorEventListener {
                 shouldReallyStop = true;
                 mRegisteredSensors.remove(sensor);
             } else {
-                mRegisteredSensors.put(sensor, mRegisteredSensors.get(sensor) - 1);
+                mRegisteredSensors.put(sensor, currentCount - 1);
             }
         }
         if (shouldReallyStop) {
@@ -571,6 +569,9 @@ public class SensorManager implements SensorEventListener {
                 break;
             }
             case Sensor.TYPE_LINEAR_ACCELERATION: {
+                if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
+                    return sensordata;
+                }
                 float x = values[0];
                 float y = values[1];
                 float z = values[2];
@@ -725,8 +726,9 @@ public class SensorManager implements SensorEventListener {
     private String eventProperty(int type) {
         switch (type) {
             case Sensor.TYPE_ACCELEROMETER:
-            case Sensor.TYPE_LINEAR_ACCELERATION:
                 return EVENT_ACC;
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                return EVENT_LINEAR_ACCELERATION;
             case Sensor.TYPE_GAME_ROTATION_VECTOR:
             case Sensor.TYPE_ROTATION_VECTOR:
                 return EVENT_ROTATION;
@@ -777,24 +779,10 @@ public class SensorManager implements SensorEventListener {
             event.timestamp = myTimeReference +
                     Math.round((event.timestamp - sensorTimeReference) / 1000000.0);
             long newSensorEventTimestamp = event.timestamp;// MICRO
-        //    Log.d(TAG, "onSensorChanged " + sensorType + ", " + type + ", " + newSensorEventTimestamp);
-
-            // SECONDS
-            if (mListeners.containsKey(type)) {
-
-                HashMap sensordata = null;
-
-                if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION
-                        && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
+        //    Log.d(TAG, "onSensorChanged " + sensorType + ", " + type);
+            if (sensorType == Sensor.TYPE_GRAVITY
+                        && isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)) {
                     if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY))
-                        return;
-                    sensordata = eventToMap(sensorType,
-                            event.values, event.accuracy);
-                    mCurrentValues.remove(Sensor.TYPE_GRAVITY);
-                } else if (sensorType == Sensor.TYPE_GRAVITY
-                        && isSensorRegistered(Sensor.TYPE_ACCELEROMETER)) {
-                    if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY))
-                        ;
                     {
                         // gravity values are inversed!
                         float[] gravs = event.values.clone();
@@ -803,6 +791,20 @@ public class SensorManager implements SensorEventListener {
                         gravs[2] *= -1;
                         mCurrentValues.put(sensorType, gravs);
                     }
+                } 
+            // SECONDS
+            if (mListeners.containsKey(type)) {
+
+                HashMap sensordata = null;
+
+                if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION
+                        && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
+                    if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
+                        return;
+                    }
+                    sensordata = eventToMap(sensorType,
+                            event.values, event.accuracy);
+                    mCurrentValues.remove(Sensor.TYPE_GRAVITY);
                 } else {
                     sensordata = eventToMap(sensorType,
                             event.values, event.accuracy);

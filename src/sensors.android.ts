@@ -69,6 +69,13 @@ function androidHashMapToJson(map: java.util.HashMap<any, any>) {
             result[key] = androidHashMapToJson(value);
         } else if (value instanceof java.lang.Number) {
             result[key] = value.doubleValue();
+        } else if (value && value.hasOwnProperty('length')) {
+            // const jsValue = [];
+            // const length = value.length;
+            // for (let i = 0; i < length; i++) {
+            //     jsValue[i] = value[i];
+            // }
+            result[key] = Array.from({ length: value.length }).map((v, i) => value[i]);
         } else {
             result[key] = value;
         }
