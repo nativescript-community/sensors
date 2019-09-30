@@ -83,6 +83,9 @@ function fireEvent(event: string, data: Object) {
 }
 
 function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
+    if (!data) {
+        return; // for now. Need error handling
+    }
     const currentAttitude = data.attitude;
     const realTimestamp = Math.round((bootTimestamp + data.timestamp) * 1000);
     if (listeners['orientation']) {
