@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](https://github.com/Akylas/nativescript-sensors/compare/v0.0.14...v1.0.0) (2019-12-16)
+
+
+### Bug Fixes
+
+* updated perms, migration to [@nativescript](https://github.com/nativescript) ([796806a](https://github.com/Akylas/nativescript-sensors/commit/796806ac8cdd27d5b9ea6de07a3df71f79a8b41e))
+
+
+
+
+
 ## [0.0.14](https://github.com/Akylas/nativescript-sensors/compare/v0.0.13...v0.0.14) (2019-09-30)
 
 

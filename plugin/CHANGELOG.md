@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](https://github.com/Akylas/nativescript-sensors/compare/v0.0.14...v1.0.0) (2019-12-16)
+
+**Note:** Version bump only for package nativescript-sensors
+
+
+
+
+
 ## [0.0.14](https://github.com/Akylas/nativescript-sensors/compare/v0.0.13...v0.0.14) (2019-09-30)
 
 **Note:** Version bump only for package nativescript-sensors
