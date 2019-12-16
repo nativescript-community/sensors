@@ -1,5 +1,5 @@
-import { ad } from 'tns-core-modules/utils/utils';
-import lazy from 'tns-core-modules/utils/lazy';
+import { ad } from '@nativescript/core/utils/utils';
+import lazy from '@nativescript/core/utils/lazy';
 import { CLog, CLogTypes } from './sensors.common';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 

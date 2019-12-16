@@ -257,7 +257,7 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
                 }
                 case 'barometer': {
                     return perms.request('motion').then(r => {
-                        if (r === 'authorized') {
+                        if (r[0] === 'authorized') {
                             const altitudeManager = getAltitudeManager();
                             // altitudeManager.update = updateInterval / 1000;
                             altitudeManager.startRelativeAltitudeUpdatesToQueueWithHandler(motionQueue, onDeviceAltitude);

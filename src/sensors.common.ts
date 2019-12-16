@@ -1,4 +1,4 @@
-import * as httpModuleDef from 'tns-core-modules/http';
+import * as httpModuleDef from '@nativescript/core/http';
 
 
 let debug = false;
