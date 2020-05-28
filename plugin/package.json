@@ -1,6 +1,6 @@
 {
     "name": "nativescript-sensors",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Nativescript plugin for Carto Mobile SDK",
     "main": "sensors",
     "typings": "sensors.d.ts",
