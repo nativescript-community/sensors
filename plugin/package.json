@@ -26,6 +26,6 @@
     "homepage": "https://github.com/farfromrefug/nativescript-sensors",
     "bootstrapper": "nativescript-plugin-seed",
     "dependencies": {
-        "nativescript-perms": "^1.0.8"
+        "nativescript-perms": "^2.0.10"
     }
 }

@@ -1,6 +1,5 @@
 import * as httpModuleDef from '@nativescript/core/http';
 
-
 let debug = false;
 export function setDebug(value: boolean) {
     debug = value;
@@ -9,7 +8,7 @@ export function setDebug(value: boolean) {
 export enum CLogTypes {
     info,
     warning,
-    error
+    error,
 }
 
 export const CLog = (type: CLogTypes = 0, ...args) => {
@@ -66,29 +65,45 @@ function handleAVWXResut(result: AVWXResult) {
         longitude: result.info.longitude,
         icao: result.info.icao,
         elevation: result.info.elevation_m,
-        pressure: result.altimeter.value
+        pressure: result.altimeter.value,
     };
 }
 
-export function getAirportPressure(airport: string) {
-    const httpModule = require('tns-core-modules/http') as typeof httpModuleDef;
-    return httpModule.getJSON<AVWXResult>(`https://avwx.rest/api/metar/${airport}?options=info&format=json&onfail=cache`).then(result => {
-
-        // returned pressure is in inHg
-        if (!result.altimeter) {
-            throw new Error(`airport not found ${airport}`);
-        }
-        return handleAVWXResut(result);
-    });
+export function getAirportPressure(apiKey, airport: string) {
+    const httpModule = require('@nativescript/core/http') as typeof httpModuleDef;
+    return httpModule
+        .getJSON<AVWXResult>({
+            url: `https://avwx.rest/api/metar/${airport}?onfail=cache&options=info&format=json`,
+            method: 'GET',
+            headers: {
+                Authorization: apiKey,
+            },
+        })
+        .then((result) => {
+            // returned pressure is in inHg
+            if (!result.altimeter) {
+                throw new Error(`airport not found ${airport}`);
+            }
+            return handleAVWXResut(result);
+        });
 }
-export function getAirportPressureAtLocation(lat: number, lon: number) {
-    const httpModule = require('tns-core-modules/http') as typeof httpModuleDef;
-    return httpModule.getJSON<AVWXResult>(`https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`).then(result => {
-
-        // returned pressure is in inHg
-        if (!result.altimeter) {
-            throw new Error(`could not find airport pressure for location ${lat},${lon}`);
-        }
-        return handleAVWXResut(result);
-    });
+export function getAirportPressureAtLocation(apiKey, lat: number, lon: number) {
+    const httpModule = require('@nativescript/core/http') as typeof httpModuleDef;
+    return httpModule
+        .getJSON<AVWXResult>({
+            url: `https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`,
+            method: 'GET',
+            headers: {
+                Authorization: apiKey,
+            },
+        })
+        .then((result) => {
+            result = (result as any).sample || result;
+            console.log('getAirportPressureAtLocation', 'result', JSON.stringify(result));
+            // returned pressure is in inHg
+            if (!result.altimeter) {
+                throw new Error(`could not find airport pressure for location ${lat},${lon}: ${JSON.stringify(result)}`);
+            }
+            return handleAVWXResut(result);
+        });
 }
