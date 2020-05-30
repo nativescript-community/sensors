@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.2](https://github.com/Akylas/nativescript-sensors/compare/v1.0.1...v1.0.2) (2020-05-30)
+
+
+### Bug Fixes
+
+* typings fix ([9a24139](https://github.com/Akylas/nativescript-sensors/commit/9a24139f8cbdc4ca3e93d254f7785cb9929eeb56))
+
+
+
+
+
 ## [1.0.1](https://github.com/Akylas/nativescript-sensors/compare/v1.0.0...v1.0.1) (2020-05-28)
 
 
