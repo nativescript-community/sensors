@@ -20,7 +20,7 @@
         "nativescript-sensors": "file:../plugin",
         "nativescript-vue": "^2.0.2",
         "source-map-support": "^0.5.12",
-        "tns-core-modules": "^5.4.2"
+        "@nativescript/core": "^5.4.2"
     },
     "devDependencies": {
         "@babel/core": "~7.4.5",

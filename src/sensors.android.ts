@@ -1,5 +1,5 @@
-import { ad } from '@nativescript/core/utils/utils';
 import lazy from '@nativescript/core/utils/lazy';
+import { ad } from '@nativescript/core/utils/utils';
 import { CLog, CLogTypes } from './sensors.common';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 
@@ -113,7 +113,7 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
                     listener(androidHashMapToJson(data), event);
                 }
             });
-            CLog(CLogTypes.info, '[nativescript-sensors]', 'addListenerForSensor', sensor, androidListener, updateInterval, maxReportLatency);
+            CLog(CLogTypes.info, 'addListenerForSensor', sensor, androidListener, updateInterval, maxReportLatency);
             const result = getSensorManager().addListenerForSensor(sensor, androidListener, updateInterval, maxReportLatency);
             if (result) {
                 listeners[sensor] = listeners[sensor] || { jsListeners: [], androidListeners: [] };
@@ -132,12 +132,12 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
     }
     return Promise.all(
         sensors.map(sensor => {
-            CLog(CLogTypes.info, '[nativescript-sensors]', 'stopListeningForSensor', sensor, listeners[sensor]);
+            CLog(CLogTypes.info, 'stopListeningForSensor', sensor, listeners[sensor]);
             if (sensor && listeners[sensor]) {
                 const index = listeners[sensor].jsListeners.indexOf(listener);
                 if (index !== -1) {
                     const androidListener = listeners[sensor].androidListeners[index];
-                    CLog(CLogTypes.info, '[nativescript-sensors]', 'removeListenerForSensor', sensor, index, androidListener);
+                    CLog(CLogTypes.info, 'removeListenerForSensor', sensor, index, androidListener);
                     if (androidListener) {
                         getSensorManager().removeListenerForSensor(sensor, androidListener);
                     }

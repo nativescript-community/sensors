@@ -11,13 +11,13 @@ export const SENSORS = [
     'floorCounter',
     'distance',
     'pace',
-    'cadence'
+    'cadence',
 ] as const;
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
 export * from './sensors.common';
 
-import * as perms from 'nativescript-perms';
+import { request } from '@nativescript-community/perms';
 
 const uptime = NSProcessInfo.processInfo.systemUptime;
 // Now since 1970
@@ -79,7 +79,7 @@ type SensorListener = { [key in SensorType]?: Function[] };
 const listeners: SensorListener = {};
 
 function fireEvent(event: string, data: Object) {
-    listeners[event].forEach(l => l(data, event));
+    listeners[event].forEach((l) => l(data, event));
 }
 
 function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
@@ -94,7 +94,7 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
             timestamp: realTimestamp,
             yaw: currentAttitude.yaw,
             pitch: currentAttitude.pitch,
-            roll: currentAttitude.roll
+            roll: currentAttitude.roll,
         };
         fireEvent('orientation', event);
     }
@@ -106,7 +106,7 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
             accuracy: data.magneticField.accuracy,
             quaternion: [quat.x, quat.y, quat.z, quat.w],
             rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, 0, rotation.m21, rotation.m22, rotation.m23, 0, rotation.m31, rotation.m32, rotation.m33, 0, 0, 0, 0, 1],
-            orientation: [currentAttitude.yaw, currentAttitude.pitch, currentAttitude.roll]
+            orientation: [currentAttitude.yaw, currentAttitude.pitch, currentAttitude.roll],
         };
         fireEvent('rotation', event);
     }
@@ -119,23 +119,23 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
                 gravity: {
                     x: data.gravity.x,
                     y: data.gravity.y,
-                    z: data.gravity.z
+                    z: data.gravity.z,
                 },
                 user: {
                     x: data.userAcceleration.x,
                     y: data.userAcceleration.y,
-                    z: data.userAcceleration.z
+                    z: data.userAcceleration.z,
                 },
                 x: data.gravity.x + data.userAcceleration.x,
                 y: data.gravity.y + data.userAcceleration.y,
-                z: data.gravity.z + data.userAcceleration.z
+                z: data.gravity.z + data.userAcceleration.z,
             },
             accuracy: data.magneticField.accuracy,
             orientation: [currentAttitude.yaw, currentAttitude.pitch, currentAttitude.roll],
             magnetometer: [data.magneticField.field.x, data.magneticField.field.y, data.magneticField.field.z],
             quaternion: [quat.x, quat.y, quat.z, quat.w],
             rotationMatrix: [rotation.m11, rotation.m12, rotation.m12, 0, rotation.m21, rotation.m22, rotation.m23, 0, rotation.m31, rotation.m32, rotation.m33, 0, 0, 0, 0, 1],
-            gyroscope: [data.rotationRate.x, data.rotationRate.y, data.rotationRate.z]
+            gyroscope: [data.rotationRate.x, data.rotationRate.y, data.rotationRate.z],
         };
         fireEvent('motion', event);
     }
@@ -148,23 +148,23 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
                 gravity: {
                     x: data.gravity.x,
                     y: data.gravity.y,
-                    z: data.gravity.z
+                    z: data.gravity.z,
                 },
                 user: {
                     x: data.userAcceleration.x,
                     y: data.userAcceleration.y,
-                    z: data.userAcceleration.z
+                    z: data.userAcceleration.z,
                 },
                 raw: {
                     x: data.userAcceleration.x * STANDARD_GRAVITY,
                     y: data.userAcceleration.y * STANDARD_GRAVITY,
-                    z: data.userAcceleration.z * STANDARD_GRAVITY
+                    z: data.userAcceleration.z * STANDARD_GRAVITY,
                 },
                 x: data.gravity.x + data.userAcceleration.x,
                 y: data.gravity.y + data.userAcceleration.y,
-                z: data.gravity.z + data.userAcceleration.z
+                z: data.gravity.z + data.userAcceleration.z,
             },
-            accuracy: data.magneticField.accuracy
+            accuracy: data.magneticField.accuracy,
         };
         fireEvent('linearAcceleration', event);
     }
@@ -193,7 +193,7 @@ function onDeviceMagnetometer(data: CMMagnetometerData, error: NSError) {
             timestamp: realTimestamp,
             x: data.magneticField.x,
             y: data.magneticField.y,
-            z: data.magneticField.z
+            z: data.magneticField.z,
         };
         fireEvent('magnometer', event);
     }
@@ -204,7 +204,7 @@ function onDeviceAltitude(data: CMAltitudeData, error: NSError) {
         const event = {
             timestamp: realTimestamp,
             relativeAltitude: data.relativeAltitude,
-            pressure: data.pressure
+            pressure: data.pressure,
         };
         fireEvent('barometer', event);
     }
@@ -216,7 +216,7 @@ function onDeviceGyro(data: CMGyroData, error: NSError) {
             timestamp: realTimestamp,
             x: data.rotationRate.x,
             y: data.rotationRate.y,
-            z: data.rotationRate.z
+            z: data.rotationRate.z,
         };
         fireEvent('gyroscope', event);
     }
@@ -227,7 +227,7 @@ function onPedometer(data: CMPedometerData, error: NSError) {
         const event = {
             startDate: data.startDate,
             endDate: data.endDate,
-            steps: data.numberOfSteps
+            steps: data.numberOfSteps,
         };
         fireEvent('stepCounter', event);
     }
@@ -239,7 +239,7 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
     }
 
     return Promise.all(
-        sensors.map(sensor => {
+        sensors.map((sensor) => {
             if (!isSensorAvailable(sensor)) {
                 throw new Error(`sensor not available ${sensor}`);
             }
@@ -256,7 +256,7 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
                     break;
                 }
                 case 'barometer': {
-                    return perms.request('motion').then(r => {
+                    return request('motion').then((r) => {
                         if (r[0] === 'authorized') {
                             const altitudeManager = getAltitudeManager();
                             // altitudeManager.update = updateInterval / 1000;
@@ -310,7 +310,7 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
         sensors = [sensors];
     }
     return Promise.all(
-        sensors.map(sensor => {
+        sensors.map((sensor) => {
             if (sensor && listeners[sensor]) {
                 const index = listeners[sensor].indexOf(listener);
                 if (index !== -1) {

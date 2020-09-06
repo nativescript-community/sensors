@@ -1,8 +1,8 @@
 // require('./ts_helpers');
 import Vue from 'nativescript-vue';
 import App from './App.vue';
-import { knownFolders } from 'tns-core-modules/file-system';
-import * as application from 'tns-core-modules/application';
+import { knownFolders } from '@nativescript/core/file-system';
+import * as application from '@nativescript/core/application';
 
 const currentApp = knownFolders.currentApp();
 require('source-map-support').install({
