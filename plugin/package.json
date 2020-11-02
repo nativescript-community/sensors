@@ -4,6 +4,7 @@
     "description": "Nativescript plugin for Carto Mobile SDK",
     "main": "sensors",
     "typings": "sensors.d.ts",
+    "sideEffects": false,
     "nativescript": {
         "platforms": {
             "android": "4.2.0",
