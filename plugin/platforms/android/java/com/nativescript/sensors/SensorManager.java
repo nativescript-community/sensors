@@ -9,6 +9,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
 import android.util.Log;
+import android.view.Surface;
+import android.view.WindowManager;
+import android.view.Display;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +25,7 @@ public class SensorManager implements SensorEventListener {
     private static final String PROPERTY_X = "x";
     private static final String PROPERTY_Y = "y";
     private static final String PROPERTY_Z = "z";
+    private static final String PROPERTY_HEADING = "heading";
     private static final String PROPERTY_ACCURACY = "accuracy";
     private static final String PROPERTY_YAW = "yaw";
     private static final String PROPERTY_PITCH = "pitch";
@@ -31,11 +35,11 @@ public class SensorManager implements SensorEventListener {
     private static final String PROPERTY_USER = "user";
     private static final String PROPERTY_RAW = "raw";
 
-
     private static final String EVENT_LINEAR_ACCELERATION = "linearAcceleration";
     private static final String EVENT_ACC = "accelerometer";
     private static final String EVENT_GYRO = "gyroscope";
     private static final String EVENT_ORIENTATION = "orientation";
+    private static final String EVENT_HEADING = "heading";
     private static final String EVENT_MAG = "magnetometer";
     private static final String EVENT_MOTION = "motion";
     private static final String EVENT_ROTATION = "rotation";
@@ -51,31 +55,27 @@ public class SensorManager implements SensorEventListener {
     private static final String EVENT_LIGHT = "light";
     private static final String EVENT_GRAVITY = "gravity";
 
-
-    public static List<String> POSSIBLE_MOTION_SENSORS = Arrays.asList(EVENT_ACC,
-            EVENT_GYRO, EVENT_ORIENTATION, EVENT_MAG, EVENT_ROTATION);
+    public static List<String> POSSIBLE_MOTION_SENSORS = Arrays.asList(EVENT_ACC, EVENT_GYRO, EVENT_ORIENTATION,
+            EVENT_MAG, EVENT_ROTATION);
 
     public static final int ACCURACY_UNCALIBRATED = android.hardware.SensorManager.SENSOR_STATUS_UNRELIABLE;
     public static final float STANDARD_GRAVITY = android.hardware.SensorManager.STANDARD_GRAVITY;
 
+    // public static Boolean isSimulatorCache = null;
 
-    public static Boolean isSimulatorCache = null;
-
-    public boolean isSimulator() {
-        if (isSimulatorCache  == null) {
-            isSimulatorCache =
-                    Build.FINGERPRINT.startsWith("generic") ||
-                            Build.FINGERPRINT.startsWith("unknown") ||
-                            (Build.MODEL.contains("google_sdk")) ||
-                            Build.MODEL.contains("Emulator") ||
-                            Build.MODEL.contains("Android SDK built for x86") ||
-                            (Build.MANUFACTURER.contains("Genymotion")) ||
-                            (Build.MANUFACTURER.contains("Genymotion")) ||
-                            (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
-                            (Build.PRODUCT.contains("sdk"));
-        }
-        return isSimulatorCache;
-    }
+    // public boolean isSimulator() {
+    // if (isSimulatorCache == null) {
+    // isSimulatorCache = Build.FINGERPRINT.startsWith("generic") ||
+    // Build.FINGERPRINT.startsWith("unknown")
+    // || (Build.MODEL.contains("google_sdk")) || Build.MODEL.contains("Emulator")
+    // || Build.MODEL.contains("Android SDK built for x86") ||
+    // (Build.MANUFACTURER.contains("Genymotion"))
+    // || (Build.MANUFACTURER.contains("Genymotion"))
+    // || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+    // || (Build.PRODUCT.contains("sdk"));
+    // }
+    // return isSimulatorCache;
+    // }
 
     private static final Object valuesLock = new Object();
 
@@ -88,11 +88,11 @@ public class SensorManager implements SensorEventListener {
 
     private Handler mSensorHandler;
     private android.hardware.SensorManager mSensorManager;
-
+    private Context context;
     private HashMap<Integer, Integer> mRegisteredSensors = new HashMap<>();
-    private List<String> motionSensors = new ArrayList<>(
-            POSSIBLE_MOTION_SENSORS);
+    private List<String> motionSensors = new ArrayList<>(POSSIBLE_MOTION_SENSORS);
     private int currentMagnetometerAccuracy = ACCURACY_UNCALIBRATED;
+    private int currentAccelerometerAccuracy = ACCURACY_UNCALIBRATED;
     private float currentPressureAltitude = -1;
     private boolean computeRotationMatrix = true;
 
@@ -119,7 +119,6 @@ public class SensorManager implements SensorEventListener {
     private HashMap<Integer, float[]> mCurrentValues = new HashMap<Integer, float[]>();
     private long lastTimeStamp = -1;
 
-
     private HashMap<String, List<SensorManagerEventListener>> mListeners = new HashMap<>();
 
     /*
@@ -128,14 +127,15 @@ public class SensorManager implements SensorEventListener {
      */
     public SensorManager(Context context) {
         // Get the SensorManager
+        this.context = context;
         mSensorManager = (android.hardware.SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         // Setup our background thread for sensors
-        HandlerThread mSensorThread = new HandlerThread("Nativescript Sensosr Thread", Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread mSensorThread = new HandlerThread("Nativescript Sensosr Thread",
+                Process.THREAD_PRIORITY_BACKGROUND);
         mSensorThread.start();
         mSensorHandler = new Handler(mSensorThread.getLooper()); // Blocks until looper is prepared
         // Log.d(TAG, "SensorManager HandlerThread: " + mSensorThread);
     }
-
 
     protected void fireEvent(String event, HashMap data) {
         List<SensorManagerEventListener> listeners = mListeners.get(event);
@@ -173,120 +173,13 @@ public class SensorManager implements SensorEventListener {
 
     }
 
-//    public void setListener(SensorManagerListener mListener) {
-//        this.mListener = mListener;
-//        Log.d(TAG, "Listener: " + this.mListener);
-//    }
-
-//    public static boolean supportsFIFO(Sensor sensor) {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            return sensor.getFifoMaxEventCount() != 0;
-//        }
-//        return false;
-//    }
-
-    // @Override
-    // public void onSensorChanged(SensorEvent event) {
-    //     if (mListener != null) {
-
-    //         long newSensorEventTimestamp = (new Date()).getTime()
-    //                 + (event.timestamp - System.nanoTime()) / 1000000L;/
-
-
-    //         LiteDataBag liteDataBag = null;
-    //         HeavyDataBag heavyDataBag = null;
-    //         HashMap<String, Float> sensorData = new HashMap<>();
-
-    //         int sensorType = event.sensor.getType();
-    //         // depending on the the sensor type set the result to return in the listener
-    //         if (sensorType == Sensor.TYPE_ACCELEROMETER
-    //                 || sensorType == Sensor.TYPE_LINEAR_ACCELERATION
-    //                 || sensorType == Sensor.TYPE_GYROSCOPE
-    //                 || sensorType == Sensor.TYPE_MAGNETIC_FIELD) {
-    //             sensorData.put("x", event.values[0]);
-    //             sensorData.put("y", event.values[1]);
-    //             sensorData.put("z", event.values[2]);
-    //         } else if (sensorType == Sensor.TYPE_GRAVITY) {
-    //             // gravity values are inversed!
-    //             sensorData.put("x", -event.values[0]);
-    //             sensorData.put("y", -event.values[1]);
-    //             sensorData.put("z", -event.values[2]);
-    //         } else if (sensorType == Sensor.TYPE_ROTATION_VECTOR) {
-    //             sensorData.put("x", event.values[0]);
-    //             sensorData.put("y", event.values[1]);
-    //             sensorData.put("z", event.values[2]);
-    //             sensorData.put("cos", event.values[3]);
-    //             sensorData.put("heading_accuracy", event.values[4]);
-    //         } else if (sensorType == Sensor.TYPE_GAME_ROTATION_VECTOR) {
-    //             sensorData.put("x", event.values[0]);
-    //             sensorData.put("y", event.values[1]);
-    //             sensorData.put("z", event.values[2]);
-    //             sensorData.put("cos", event.values[3]);
-    //         } else if (sensorType == Sensor.TYPE_STATIONARY_DETECT) {
-    //             sensorData.put("stationary", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_PROXIMITY) {
-    //             sensorData.put("proximity", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_LOW_LATENCY_OFFBODY_DETECT) {
-    //             sensorData.put("state", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_HEART_RATE) {
-    //             sensorData.put("heart_rate", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_HEART_BEAT) {
-    //             sensorData.put("confidence", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_LIGHT) {
-    //             sensorData.put("light_level", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_PRESSURE) {
-    //             sensorData.put("pressure", event.values[0]);
-    //         } else if (sensorType == Sensor.TYPE_RELATIVE_HUMIDITY) {
-    //             sensorData.put("humidity", event.values[0]); // Relative ambient air humidity in percent
-    //         } else if (sensorType == Sensor.TYPE_AMBIENT_TEMPERATURE) {
-    //             sensorData.put("temp", event.values[0]); // ambient (room) temperature in degree Celsius
-    //         } else if (sensorType == Sensor.TYPE_POSE_6DOF) {
-    //             sensorData.put("x", event.values[0]);
-    //             sensorData.put("y", event.values[1]);
-    //             sensorData.put("z", event.values[2]);
-    //             sensorData.put("cos", event.values[3]);
-    //             sensorData.put("x_translation", event.values[4]);
-    //             sensorData.put("y_translation", event.values[5]);
-    //             sensorData.put("z_translation", event.values[6]);
-    //             sensorData.put("x_rotation", event.values[7]);
-    //             sensorData.put("y_rotation", event.values[8]);
-    //             sensorData.put("z_rotation", event.values[9]);
-    //             sensorData.put("cos_rotation", event.values[10]);
-    //             sensorData.put("x_delta_translation", event.values[11]);
-    //             sensorData.put("y_delta_translation", event.values[12]);
-    //             sensorData.put("z_delta_translation", event.values[13]);
-    //             sensorData.put("sequence_number", event.values[14]);
-    //         }
-
-    //         // if (useLiteDataBagForSensorData) {
-    //             liteDataBag = new LiteDataBag();
-    //             liteDataBag.s = sensorType;
-    //             liteDataBag.ts = event.timestamp;
-    //             liteDataBag.d = sensorData;
-    //         // } else {
-    //         //     heavyDataBag = new HeavyDataBag();
-    //         //     heavyDataBag.sensor = event.sensor.getStringType();
-    //         //     heavyDataBag.timestamp = event.timestamp;
-    //         //     heavyDataBag.data = sensorData;
-    //         // }
-
-    //         Gson gson = new Gson();
-    //         String result = useLiteDataBagForSensorData
-    //                 ? gson.toJson(liteDataBag)
-    //                 : gson.toJson(heavyDataBag);
-
-    //         // send the data to the SensorManagerListener
-    //         mListener.onSensorChanged(result);
-    //     }
-    // }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+        if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             currentMagnetometerAccuracy = accuracy;
-        // send the values to the SensorManagerListener
-//        mListener.onAccuracyChanged(sensor, accuracy);
-
+        } else if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            currentAccelerometerAccuracy = accuracy;
+        }
     }
 
     protected List<Integer> getActualSensors(String sensorType) {
@@ -309,43 +202,38 @@ public class SensorManager implements SensorEventListener {
                 result.add(Sensor.TYPE_ROTATION_VECTOR);
                 break;
             case EVENT_PRESSURE:
-                result.add(
-                        Sensor.TYPE_PRESSURE);
+                result.add(Sensor.TYPE_PRESSURE);
                 break;
             case EVENT_PROXIMITY:
-                result.add(
-                        Sensor.TYPE_PROXIMITY);
+                result.add(Sensor.TYPE_PROXIMITY);
                 break;
             case EVENT_HEART_BEAT:
-                result.add(
-                        Sensor.TYPE_HEART_BEAT);
+                result.add(Sensor.TYPE_HEART_BEAT);
                 break;
             case EVENT_HEART_RATE:
-                result.add(
-                        Sensor.TYPE_HEART_RATE);
+                result.add(Sensor.TYPE_HEART_RATE);
                 break;
             case EVENT_STEP_DETECTOR:
-                result.add(
-                        Sensor.TYPE_STEP_DETECTOR);
+                result.add(Sensor.TYPE_STEP_DETECTOR);
                 break;
             case EVENT_STEP_COUNTER:
-                result.add(
-                        Sensor.TYPE_STEP_COUNTER);
+                result.add(Sensor.TYPE_STEP_COUNTER);
                 break;
             case EVENT_TEMPERATURE:
-                result.add(
-                        Sensor.TYPE_AMBIENT_TEMPERATURE);
+                result.add(Sensor.TYPE_AMBIENT_TEMPERATURE);
                 break;
             case EVENT_HUMIDITY:
-                result.add(
-                        Sensor.TYPE_RELATIVE_HUMIDITY);
+                result.add(Sensor.TYPE_RELATIVE_HUMIDITY);
                 break;
             case EVENT_STATIONARY_DETECT:
-                result.add(
-                        Sensor.TYPE_STATIONARY_DETECT);
+                result.add(Sensor.TYPE_STATIONARY_DETECT);
                 break;
             case EVENT_ORIENTATION:
                 result.add(Sensor.TYPE_ORIENTATION);
+                break;
+            case EVENT_HEADING:
+                result.add(Sensor.TYPE_MAGNETIC_FIELD);
+                result.add(Sensor.TYPE_ACCELEROMETER);
                 break;
             case EVENT_LIGHT:
                 result.add(Sensor.TYPE_LIGHT);
@@ -375,11 +263,12 @@ public class SensorManager implements SensorEventListener {
                 }
                 break;
         }
-        Log.d(TAG, "getActualSensors "  + sensorType + ": " + result);
+        Log.d(TAG, "getActualSensors2 " + sensorType + ": " + result);
         return result;
     }
 
-    public boolean addListenerForSensor(String sensorType, SensorManagerEventListener listener, int sensorDelay, int maxReportLatencyUs) {
+    public boolean addListenerForSensor(String sensorType, SensorManagerEventListener listener, int sensorDelay,
+            int maxReportLatencyUs) {
         final List<Integer> sensors = getActualSensors(sensorType);
         addEventListener(sensorType, listener);
         boolean result = true;
@@ -405,7 +294,7 @@ public class SensorManager implements SensorEventListener {
     }
 
     protected boolean isSensorRegistered(int sensor) {
-        return mRegisteredSensors.containsKey(sensor)  &&  mRegisteredSensors.get(sensor) > 0;
+        return mRegisteredSensors.containsKey(sensor) && mRegisteredSensors.get(sensor) > 0;
     }
 
     public boolean hasSensor(String sensorType) {
@@ -422,19 +311,20 @@ public class SensorManager implements SensorEventListener {
     /**
      * Starts the sensor with the provided sensor reporting delay.
      *
-     * @param sensor      [int] - The sensor type.
-     * @param sensorDelayMS [int] - The sensory reporting delay in MS.
+     * @param sensor             [int] - The sensor type.
+     * @param sensorDelayMS      [int] - The sensory reporting delay in MS.
      * @param maxReportLatencyMs [int] - The sensory max report latency in MS.
      * @return [boolean] - Return true if sensor is registered with the listener.
      */
     protected Sensor startSensor(int sensor, int sensorDelayMS, int maxReportLatencyMs) {
 
-//        final boolean isStarted = mRegisteredSensors.contains(sensor);
-//        if (isStarted) {
-//            return;
-//        }
+        // final boolean isStarted = mRegisteredSensors.contains(sensor);
+        // if (isStarted) {
+        // return;
+        // }
         if (mSensorManager == null) { // BOO NO SENSOR MANAGER
-            Log.d(TAG, "SensorManager does not have the SensorManager. Will return null since no sensor can be registered.");
+            Log.d(TAG,
+                    "SensorManager does not have the SensorManager. Will return null since no sensor can be registered.");
             return null;
         }
 
@@ -447,18 +337,23 @@ public class SensorManager implements SensorEventListener {
                 steperStartTime = (new Date()).getTime();
             }
             // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " + defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
+            // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " +
+            // defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " +
+            // maxReportLatencyMs + ", " + defaultSensor);
             // } else {
-            Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", " + maxReportLatencyMs + ", " + defaultSensor);
+            Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", "
+                    + maxReportLatencyMs + ", " + defaultSensor);
             // }
 
             // calling multiple register on the same sensor will fail
             boolean didRegister = mRegisteredSensors.containsKey(sensor);
             if (!didRegister) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000, maxReportLatencyMs * 1000, mSensorHandler);
+                    didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000,
+                            maxReportLatencyMs * 1000, mSensorHandler);
                 } else {
-                    didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000, mSensorHandler);
+                    didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000,
+                            mSensorHandler);
                 }
             }
 
@@ -466,13 +361,14 @@ public class SensorManager implements SensorEventListener {
                 if (!mRegisteredSensors.containsKey(sensor)) {
                     mRegisteredSensors.put(sensor, 1);
                 }
-                return defaultSensor;  // YAY SENSOR REGISTERED
+                return defaultSensor; // YAY SENSOR REGISTERED
             } else {
                 // Log.d(TAG, "SensorManager failed to registerListener for type " + sensor);
                 return null;
             }
         } else {
-            // Log.d(TAG, "SensorManager unable to get the default sensor for type: " + sensor);
+            // Log.d(TAG, "SensorManager unable to get the default sensor for type: " +
+            // sensor);
             return null; // BOO SENSOR NOT REGISTERED
         }
     }
@@ -495,7 +391,8 @@ public class SensorManager implements SensorEventListener {
         }
         if (shouldReallyStop) {
             Sensor defaultSensor = mSensorManager.getDefaultSensor(sensor);
-            // Log.d(TAG, "stopSensor " + sensor + ", " + eventProperty(sensor) + ", " + defaultSensor);
+            // Log.d(TAG, "stopSensor " + sensor + ", " + eventProperty(sensor) + ", " +
+            // defaultSensor);
 
             if (defaultSensor != null) {
                 mSensorManager.unregisterListener(this, defaultSensor);
@@ -642,7 +539,7 @@ public class SensorManager implements SensorEventListener {
             }
             case Sensor.TYPE_STEP_COUNTER: {
                 if (startSteps == 0) {
-                  startSteps = (long)values[0];
+                    startSteps = (long) values[0];
                 }
                 sensordata.put("steps", values[0] - startSteps);
                 sensordata.put("startDate", steperStartTime);
@@ -674,17 +571,18 @@ public class SensorManager implements SensorEventListener {
                 break;
             }
             case Sensor.TYPE_STATIONARY_DETECT: {
-                sensordata.put("stationary", values[0]); 
+                sensordata.put("stationary", values[0]);
                 break;
             }
             case Sensor.TYPE_LOW_LATENCY_OFFBODY_DETECT: {
-                sensordata.put("state", values[0]); 
+                sensordata.put("state", values[0]);
                 break;
             }
             case Sensor.TYPE_PRESSURE: {
                 float currentPressure = values[0];
                 float altitudeDifference = 0;
-                float newAltitude = android.hardware.SensorManager.getAltitude(android.hardware.SensorManager.PRESSURE_STANDARD_ATMOSPHERE, currentPressure);
+                float newAltitude = android.hardware.SensorManager
+                        .getAltitude(android.hardware.SensorManager.PRESSURE_STANDARD_ATMOSPHERE, currentPressure);
                 if (currentPressureAltitude != 1) {
                     altitudeDifference = newAltitude - currentPressureAltitude;
                 }
@@ -705,8 +603,7 @@ public class SensorManager implements SensorEventListener {
                     if (mRotationMatrix == null) {
                         mRotationMatrix = new float[16];
                     }
-                    android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix,
-                            values);
+                    android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix, values);
                     sensordata.put("rotationMatrix", mRotationMatrix);
                     if (mOrientation == null) {
                         mOrientation = new float[3];
@@ -721,7 +618,6 @@ public class SensorManager implements SensorEventListener {
         }
         return sensordata;
     }
-
 
     private String eventProperty(int type) {
         switch (type) {
@@ -767,58 +663,165 @@ public class SensorManager implements SensorEventListener {
 
     private long sensorTimeReference = 0l;
     private long myTimeReference = 0l;
+
+    private float[] lastKnownField = null;
+    private float[] lastKnownGravity = null;
+    private int mHeadingFilter = 5;
+    private double mLastBearing = -10000;
+
+    public void setHeadingFilter(int value) {
+        mHeadingFilter = value;
+    }
+
+    public static double wrap(double value, double min, double max) {
+        double result;
+
+        double offset_value = value - min;
+        if (offset_value < 0.0) {
+            result = ((max - min) - (Math.abs(offset_value) % (max - min)) + min);
+        } else {
+            result = (offset_value % (max - min)) + min;
+        }
+
+        if (result == max) {
+            result = min;
+        }
+
+        return result;
+    }
+
+    public Display getWindowDisplay() {
+        return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+    }
+
+    private double calculateBearing(Vector field, Vector gravity) {
+        double bearing;
+        if (gravity != null) {
+            gravity = new Vector(gravity);
+            gravity.normalize();
+            Vector gravity_down = new Vector(0.0, 0.0, 1.0);
+            Vector axis = gravity.crossProduct(gravity_down);
+            axis.normalize();
+            double angle = Math.acos(gravity.dotProduct(gravity_down));
+
+            Vector field_rotated = new Vector(axis);
+            field_rotated.multiply(axis.dotProduct(field));
+            Vector axis_cross_product_field = new Vector(axis).crossProduct(field);
+            Vector axis_cross_product_field_cos_angle = new Vector(axis_cross_product_field);
+            axis_cross_product_field_cos_angle.multiply(Math.cos(angle));
+            Vector axis_cross_product_field_sin_angle = new Vector(axis_cross_product_field);
+            axis_cross_product_field_sin_angle.multiply(Math.sin(angle));
+            field_rotated.add(axis_cross_product_field_cos_angle.crossProduct(axis));
+            field_rotated.add(axis_cross_product_field_sin_angle);
+
+            bearing = field_rotated.getYaw() - 90.0;
+        } else {
+            bearing = field.getYaw() - 90.0;
+        }
+
+        switch (this.getWindowDisplay().getRotation()) {
+            case Surface.ROTATION_90:
+                bearing = bearing + 90.0;
+                break;
+            case Surface.ROTATION_180:
+                bearing = bearing + 180.0;
+                break;
+            case Surface.ROTATION_270:
+                bearing = bearing + 270.0;
+                break;
+        }
+        bearing = wrap(bearing, 0.0, 360.0);
+
+        return bearing;
+    }
+
     public void onSensorChanged(SensorEvent event) {
         synchronized (valuesLock) {
             final int sensorType = event.sensor.getType();
             final String type = eventProperty(sensorType);
-            if(sensorTimeReference == 0l && myTimeReference == 0l) {
+            if (sensorTimeReference == 0l && myTimeReference == 0l) {
                 sensorTimeReference = event.timestamp;
                 myTimeReference = System.currentTimeMillis();
             }
             // set event timestamp to current time in milliseconds
-            event.timestamp = myTimeReference +
-                    Math.round((event.timestamp - sensorTimeReference) / 1000000.0);
+            event.timestamp = myTimeReference + Math.round((event.timestamp - sensorTimeReference) / 1000000.0);
             long newSensorEventTimestamp = event.timestamp;// MICRO
-        //    Log.d(TAG, "onSensorChanged " + sensorType + ", " + type);
-            if (sensorType == Sensor.TYPE_GRAVITY
-                        && isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)) {
-                    if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY))
-                    {
-                        // gravity values are inversed!
-                        float[] gravs = event.values.clone();
-                        gravs[0] *= -1;
-                        gravs[1] *= -1;
-                        gravs[2] *= -1;
-                        mCurrentValues.put(sensorType, gravs);
+            if (sensorType == Sensor.TYPE_GRAVITY) {
+                if (isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)
+                        && !mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
+                    // gravity values are inversed!
+                    float[] gravs = event.values.clone();
+                    gravs[0] *= -1;
+                    gravs[1] *= -1;
+                    gravs[2] *= -1;
+                    mCurrentValues.put(sensorType, gravs);
+                }
+            }
+            if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+                if (hasEvenListener(EVENT_HEADING)) {
+                    float[] gravity = new float[] { event.values[0], event.values[1], event.values[2] };
+
+                    // if (lastKnownField != null) {
+                    //     Vector field = new Vector(lastKnownField[0], lastKnownField[1], lastKnownField[2]);
+                    //     double bearing = calculateBearing(field, new Vector(gravity[0], gravity[1], gravity[2]));
+                    //     if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
+                    //         mLastBearing = bearing;
+                    //         HashMap data = new HashMap();
+                    //         data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                    //         data.put(PROPERTY_ACCURACY,
+                    //                 Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
+                    //         data.put(PROPERTY_HEADING, bearing);
+                    //         fireEvent(EVENT_HEADING, data);
+                    //     }
+                    // }
+                    lastKnownGravity = gravity;
+                }
+            }
+            if (sensorType == Sensor.TYPE_MAGNETIC_FIELD) {
+                if (hasEvenListener(EVENT_HEADING)) {
+                    float[] field = new float[] { event.values[0], event.values[1], event.values[2] };
+
+                    if (lastKnownGravity != null) {
+                        Vector gravity = new Vector(lastKnownGravity[0], lastKnownGravity[1], lastKnownGravity[2]);
+                        double bearing = calculateBearing(new Vector(field[0], field[1], field[2]), gravity);
+                        if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
+                            mLastBearing = bearing;
+                            HashMap data = new HashMap();
+                            data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                            data.put(PROPERTY_ACCURACY,
+                                    Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
+                            data.put(PROPERTY_HEADING, bearing);
+                            fireEvent(EVENT_HEADING, data);
+                        }
                     }
-                } 
+
+                    lastKnownField = field;
+                }
+            }
             // SECONDS
             if (mListeners.containsKey(type)) {
 
                 HashMap sensordata = null;
 
-                if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION
-                        && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
+                if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
                     if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
                         return;
                     }
-                    sensordata = eventToMap(sensorType,
-                            event.values, event.accuracy);
+                    sensordata = eventToMap(sensorType, event.values, event.accuracy);
                     mCurrentValues.remove(Sensor.TYPE_GRAVITY);
                 } else {
-                    sensordata = eventToMap(sensorType,
-                            event.values, event.accuracy);
+                    sensordata = eventToMap(sensorType, event.values, event.accuracy);
                 }
 
                 if (sensordata != null) {
-                    sensordata.put(PROPERTY_TIMESTAMP,
-                            newSensorEventTimestamp);
+                    sensordata.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
                     fireEvent(type, sensordata);
                 }
                 return;
             }
             if (hasEvenListener(EVENT_MOTION)) {
-//                Log.d(TAG, "Motion go event " + sensorType + ", " + mCurrentValues.containsKey(sensorType));
+                // Log.d(TAG, "Motion go event " + sensorType + ", " +
+                // mCurrentValues.containsKey(sensorType));
                 if (mCurrentValues.containsKey(sensorType))
                     return;
 
@@ -834,12 +837,12 @@ public class SensorManager implements SensorEventListener {
                 if (mCurrentValues.size() != motionRealNbSensors)
                     return;
 
-//                long deltaTime = (newSensorEventTimestamp - lastTimeStamp); // MILLI
+                // long deltaTime = (newSensorEventTimestamp - lastTimeStamp); // MILLI
                 // SECONDS
-//                if (lastTimeStamp != -1 && deltaTime < updateInterval) {
-//                    mCurrentValues.clear();
-//                    return;
-//                }
+                // if (lastTimeStamp != -1 && deltaTime < updateInterval) {
+                // mCurrentValues.clear();
+                // return;
+                // }
 
                 HashMap data = new HashMap();
                 data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
@@ -849,35 +852,36 @@ public class SensorManager implements SensorEventListener {
 
                 // ACCELEROMETER
                 if (mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
-                    sensordata = eventToMap(Sensor.TYPE_LINEAR_ACCELERATION, mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION), null);
+                    sensordata = eventToMap(Sensor.TYPE_LINEAR_ACCELERATION,
+                            mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION), null);
                     data.put(EVENT_ACC, sensordata);
                 }
 
                 // GYROSCOPE
                 if (mCurrentValues.get(Sensor.TYPE_GYROSCOPE) != null) {
-//                    sensordata = eventToMap(Sensor.TYPE_GYROSCOPE, mCurrentValues.get(Sensor.TYPE_GYROSCOPE), null);
+                    // sensordata = eventToMap(Sensor.TYPE_GYROSCOPE,
+                    // mCurrentValues.get(Sensor.TYPE_GYROSCOPE), null);
                     data.put(EVENT_GYRO, mCurrentValues.get(Sensor.TYPE_GYROSCOPE));
                 }
 
                 // ORIENTATION
                 if (mCurrentValues.get(Sensor.TYPE_ORIENTATION) != null) {
-//                    sensordata = eventToMap(Sensor.TYPE_ORIENTATION,
-//                            mCurrentValues.get(Sensor.TYPE_ORIENTATION), null);
+                    // sensordata = eventToMap(Sensor.TYPE_ORIENTATION,
+                    // mCurrentValues.get(Sensor.TYPE_ORIENTATION), null);
                     data.put(EVENT_ORIENTATION, mCurrentValues.get(Sensor.TYPE_ORIENTATION));
                 }
 
                 // MAGNETIC_FIELD
                 if (mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD) != null) {
-                    sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD,
-                            mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD), null);
+                    sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD, mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD),
+                            null);
                     data.put(EVENT_MAG, sensordata);
                 }
 
-
                 // GRAVITY
                 if (mCurrentValues.get(Sensor.TYPE_GRAVITY) != null) {
-//                    sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD,
-//                            mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD), null);
+                    // sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD,
+                    // mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD), null);
                     data.put(EVENT_MAG, mCurrentValues.get(Sensor.TYPE_GRAVITY));
                 }
 

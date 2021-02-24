@@ -1,3 +1,4 @@
+import { Trace } from '@nativescript/core';
 import lazy from '@nativescript/core/utils/lazy';
 import { ad } from '@nativescript/core/utils/utils';
 import { CLog, CLogTypes } from './sensors.common';
@@ -23,7 +24,8 @@ export const SENSORS = [
     'heartRate',
     'humidity',
     'light',
-    'gravity'
+    'gravity',
+    'heading'
 ] as const;
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
@@ -46,7 +48,7 @@ function hasSensor(type: SensorType) {
     }
     return sensorManager.hasSensor(type);
 }
-//
+
 export function isSensorAvailable(sensor: SensorType) {
     return hasSensor(sensor);
 }
@@ -70,20 +72,12 @@ function androidHashMapToJson(map: java.util.HashMap<any, any>) {
         } else if (value instanceof java.lang.Number) {
             result[key] = value.doubleValue();
         } else if (value && value.hasOwnProperty('length')) {
-            // const jsValue = [];
-            // const length = value.length;
-            // for (let i = 0; i < length; i++) {
-            //     jsValue[i] = value[i];
-            // }
             result[key] = Array.from({ length: value.length }).map((v, i) => value[i]);
         } else {
             result[key] = value;
         }
     }
 
-    // map.keySet().forEach(k => {
-
-    // });
     return result;
 }
 type SensorListener = {
@@ -93,7 +87,12 @@ type SensorListener = {
     };
 };
 const listeners: SensorListener = {};
-export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0) {
+export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0, options?: {
+    headingFilter?: number;
+    headingTrueNorth?: boolean;
+    headingDistanceFilter?: number;
+    headingDistanceAccuracy?: number;
+}) {
     if (!Array.isArray(sensors)) {
         sensors = [sensors];
     }
@@ -113,7 +112,14 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
                     listener(androidHashMapToJson(data), event);
                 }
             });
-            CLog(CLogTypes.info, 'addListenerForSensor', sensor, androidListener, updateInterval, maxReportLatency);
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'addListenerForSensor', sensor, androidListener, updateInterval, maxReportLatency);
+            }
+            if (sensor === 'heading') {
+                if (options && 'headingFilter' in options) {
+                    getSensorManager().setHeadingFilter(options.headingFilter);
+                }
+            }
             const result = getSensorManager().addListenerForSensor(sensor, androidListener, updateInterval, maxReportLatency);
             if (result) {
                 listeners[sensor] = listeners[sensor] || { jsListeners: [], androidListeners: [] };
@@ -132,12 +138,16 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
     }
     return Promise.all(
         sensors.map(sensor => {
-            CLog(CLogTypes.info, 'stopListeningForSensor', sensor, listeners[sensor]);
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'stopListeningForSensor', sensor, listeners[sensor]);
+            }
             if (sensor && listeners[sensor]) {
                 const index = listeners[sensor].jsListeners.indexOf(listener);
                 if (index !== -1) {
                     const androidListener = listeners[sensor].androidListeners[index];
-                    CLog(CLogTypes.info, 'removeListenerForSensor', sensor, index, androidListener);
+                    if (Trace.isEnabled()) {
+                        CLog(CLogTypes.info, 'removeListenerForSensor', sensor, index, androidListener);
+                    }
                     if (androidListener) {
                         getSensorManager().removeListenerForSensor(sensor, androidListener);
                     }
@@ -158,4 +168,18 @@ export function getAllavailableSensors() {
 
 export function flush() {
     return getSensorManager().flush();
+}
+
+export function estimateMagneticField(lat: number, lon: number, altitude: number, time: number = Date.now()) {
+    const result = new android.hardware.GeomagneticField(lat, lon, altitude, time);
+
+    return result as {
+        getDeclination(): number;
+        getInclination(): number;
+        getHorizontalStrength(): number;
+        getFieldStrength(): number;
+        getX(): number;
+        getY(): number;
+        getZ(): number;
+    };
 }

@@ -1,28 +1,16 @@
-import * as httpModuleDef from '@nativescript/core/http';
-
-let debug = false;
-export function setDebug(value: boolean) {
-    debug = value;
-}
+import { Trace } from '@nativescript/core';
+export const GPSTraceCategory = 'N-Sensors';
 
 export enum CLogTypes {
-    info,
-    warning,
-    error,
+    debug = Trace.messageType.log,
+    log = Trace.messageType.log,
+    info = Trace.messageType.info,
+    warning = Trace.messageType.warn,
+    error = Trace.messageType.error,
 }
 
-export const CLog = (type: CLogTypes = 0, ...args) => {
-    if (debug) {
-        if (type === 0) {
-            // Info
-            console.log('[@nativescript-community/sensors]', ...args);
-        } else if (type === 1) {
-            // Warning
-            console.warn('[@nativescript-community/sensors]', ...args);
-        } else if (type === 2) {
-            console.error('[@nativescript-community/sensors]', ...args);
-        }
-    }
+export const CLog = (type: CLogTypes, ...args) => {
+    Trace.write(args.map(a=>(a && typeof a === 'object'? JSON.stringify(a) :a)).join(' '), GPSTraceCategory, type);
 };
 
 /**
@@ -94,7 +82,7 @@ export async function getAirportPressureAtLocation(apiKey, lat: number, lon: num
         },
     });
     result = (result as any).sample || result;
-    console.log('getAirportPressureAtLocation', 'result', JSON.stringify(result));
+    // console.log('getAirportPressureAtLocation', 'result', JSON.stringify(result));
     // returned pressure is in inHg
     if (!result.altimeter) {
         throw new Error(`could not find airport pressure for location ${lat},${lon}: ${JSON.stringify(result)}`);

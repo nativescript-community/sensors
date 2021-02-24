@@ -12,12 +12,47 @@ export const SENSORS = [
     'distance',
     'pace',
     'cadence',
+    'heading'
 ] as const;
 export type SensorsTuple = typeof SENSORS; // readonly ['hearts', 'diamonds', 'spades', 'clubs']
 export type SensorType = SensorsTuple[number]; // union type
 export * from './sensors.common';
 
 import { request } from '@nativescript-community/perms';
+import { Trace } from '@nativescript/core';
+import { CLog, CLogTypes } from './sensors.common';
+
+
+let headingDelegate: LocationHeadingListenerImpl;
+let headingManager: CLLocationManager;
+@NativeClass
+class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerDelegate {
+    public static ObjCProtocols = [CLLocationManagerDelegate];
+    public static new() {
+        const listener = LocationHeadingListenerImpl.new() ;
+        return listener;
+    }
+    public locationManagerDidUpdateHeading?(manager: CLLocationManager, newHeading: CLHeading) {
+        if (Trace.isEnabled()) {
+            CLog(CLogTypes.info, `locationManagerDidUpdateHeading(${newHeading})`);
+        }
+        const event = {
+            timestamp: newHeading.timestamp,
+            heading: newHeading.magneticHeading,
+            accuracy: newHeading.headingAccuracy,
+            trueHeading: newHeading.trueHeading,
+            x: newHeading.x,
+            y: newHeading.y,
+            z: newHeading.z
+        };
+        fireEvent('barometer', event);
+    }
+
+    public locationManagerShouldDisplayHeadingCalibration(manager: CLLocationManager) {
+        return false;
+    }
+
+}
 
 const uptime = NSProcessInfo.processInfo.systemUptime;
 // Now since 1970
@@ -60,7 +95,7 @@ export function isSensorAvailable(sensor: SensorType) {
         case 'accelerometer':
             return getMotionManager().accelerometerAvailable;
         case 'barometer':
-            return CMAltimeter.isRelativeAltitudeAvailable;
+            return CMAltimeter.isRelativeAltitudeAvailable();
         case 'orientation':
         case 'motion':
         case 'rotation':
@@ -70,7 +105,9 @@ export function isSensorAvailable(sensor: SensorType) {
         case 'gyroscope':
             return getMotionManager().gyroAvailable;
         case 'stepCounter':
-            return CMPedometer.isStepCountingAvailable;
+            return CMPedometer.isStepCountingAvailable();
+        case 'heading':
+            return CLLocationManager.headingAvailable();
     }
     return false;
 }
@@ -140,8 +177,8 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
         fireEvent('motion', event);
     }
     if (listeners['linearAcceleration']) {
-        const quat = currentAttitude.quaternion;
-        const rotation = currentAttitude.rotationMatrix;
+        // const quat = currentAttitude.quaternion;
+        // const rotation = currentAttitude.rotationMatrix;
         const event = {
             timestamp: realTimestamp,
             accelerometer: {
@@ -233,7 +270,12 @@ function onPedometer(data: CMPedometerData, error: NSError) {
     }
 }
 
-export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0) {
+export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0, options?: {
+    headingFilter?: number;
+    headingTrueNorth?: boolean;
+    headingDistanceFilter?: number;
+    headingDistanceAccuracy?: number;
+}) {
     if (!Array.isArray(sensors)) {
         sensors = [sensors];
     }
@@ -254,6 +296,29 @@ export function startListeningForSensor(sensors: SensorType | SensorType[], list
                         motionManager.startAccelerometerUpdatesToQueueWithHandler(motionQueue, onDeviceAccelerometer);
                     }
                     break;
+                }
+                case 'heading': {
+                    return request('location').then((r) => {
+                        if (r[0] === 'authorized') {
+                            if (!headingManager) {
+                                headingManager = new CLLocationManager();
+                            }
+                            if (!headingDelegate) {
+                                headingDelegate = LocationHeadingListenerImpl.new();
+                            }
+                            headingManager.delegate = headingDelegate;
+
+                            if (options?.headingTrueNorth === true) {
+                                headingManager.distanceFilter = options?.headingDistanceFilter || 1000;
+                                headingManager.desiredAccuracy = options?.headingDistanceAccuracy || kCLLocationAccuracyKilometer;
+                                headingManager.startUpdatingLocation();
+                            }
+                            headingManager.headingFilter = options?.headingFilter || 5;
+                            headingManager.startUpdatingHeading();
+                            return true;
+                        }
+                        return false;
+                    });
                 }
                 case 'barometer': {
                     return request('motion').then((r) => {
@@ -328,6 +393,13 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
                         case 'barometer': {
                             const altitudeManager = getAltitudeManager();
                             altitudeManager.stopRelativeAltitudeUpdates();
+                            break;
+                        }
+                        case 'heading': {
+                            if (headingManager) {
+                                headingManager.stopUpdatingLocation();
+                                headingManager.stopUpdatingHeading();
+                            }
                             break;
                         }
                         case 'orientation':
