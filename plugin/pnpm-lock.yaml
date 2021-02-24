@@ -1,10 +1,10 @@
 dependencies:
-  @nativescript-community/perms: 2.0.10
-lockfileVersion: 5.1
+  '@nativescript-community/perms': 2.1.5
+lockfileVersion: 5.2
 packages:
-  /@nativescript-community/perms/2.0.10:
+  /@nativescript-community/perms/2.1.5:
     dev: false
     resolution:
-      integrity: sha512-ZJaeaBDzwxRjIdkSAGacWxMTTCYIjfFZVOOeEttAIZkJRaNIlSqE2ExGOmd560TdsuEsd+mG3l8K2UgEWmw+6A==
+      integrity: sha512-YHYgzeOvYkb6Nj2JAgor8D5YLxYvj0sxr2JfnVrkb7c/Z41lTr0PaoHvhElvK6iERobbGQ1w3HmV9eCHrDgv9g==
 specifiers:
-  @nativescript-community/perms: ^2.0.10
+  '@nativescript-community/perms': ^2.1.0
