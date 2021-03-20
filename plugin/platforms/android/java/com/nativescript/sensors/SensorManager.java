@@ -263,7 +263,6 @@ public class SensorManager implements SensorEventListener {
                 }
                 break;
         }
-        Log.d(TAG, "getActualSensors2 " + sensorType + ": " + result);
         return result;
     }
 
@@ -299,13 +298,14 @@ public class SensorManager implements SensorEventListener {
 
     public boolean hasSensor(String sensorType) {
         final List<Integer> sensors = getActualSensors(sensorType);
+        boolean result = true;
         for (Integer s : sensors) {
             Sensor defaultSensor = mSensorManager.getDefaultSensor(s);
-            if (defaultSensor != null) {
-                return true;
+            if (defaultSensor == null) {
+                return false;
             }
         }
-        return false;
+        return result;
     }
 
     /**
@@ -341,8 +341,8 @@ public class SensorManager implements SensorEventListener {
             // defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " +
             // maxReportLatencyMs + ", " + defaultSensor);
             // } else {
-            Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", "
-                    + maxReportLatencyMs + ", " + defaultSensor);
+            // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", "
+                    // + maxReportLatencyMs + ", " + defaultSensor);
             // }
 
             // calling multiple register on the same sensor will fail
