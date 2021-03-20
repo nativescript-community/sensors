@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/Akylas/nativescript-sensors/compare/v1.2.0...v1.2.1) (2021-03-20)
+
+
+### Bug Fixes
+
+* **android:** hasSensor fix ([42ae574](https://github.com/Akylas/nativescript-sensors/commit/42ae574ea067240002144c587448d89c8170917d))
+
+
+
+
+
 # [1.2.0](https://github.com/Akylas/nativescript-sensors/compare/v1.1.1...v1.2.0) (2021-02-24)
 
 
