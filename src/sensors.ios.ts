@@ -25,6 +25,7 @@ import { CLog, CLogTypes } from './sensors.common';
 
 let headingDelegate: LocationHeadingListenerImpl;
 let headingManager: CLLocationManager;
+
 @NativeClass
 class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerDelegate {
     public static ObjCProtocols = [CLLocationManagerDelegate];
@@ -51,7 +52,6 @@ class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerD
     public locationManagerShouldDisplayHeadingCalibration(manager: CLLocationManager) {
         return false;
     }
-
 }
 
 const uptime = NSProcessInfo.processInfo.systemUptime;
