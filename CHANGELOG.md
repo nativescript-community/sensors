@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/Akylas/nativescript-sensors/compare/v1.2.1...v1.3.0) (2022-11-29)
+
+
+### Features
+
+* **android:** native-api-usage ([8d8d492](https://github.com/Akylas/nativescript-sensors/commit/8d8d492ca0e5b8c75bb83e17d07875bd007cfccd))
+
+
+
+
+
 ## [1.2.1](https://github.com/Akylas/nativescript-sensors/compare/v1.2.0...v1.2.1) (2021-03-20)
 
 
