@@ -58,7 +58,7 @@ function handleAVWXResut(result: AVWXResult) {
 }
 
 export async function getAirportPressure(apiKey, airport: string) {
-    const httpModule = await import('@nativescript/core/http');
+    const { httpModule } = await import('@nativescript/core');
     const result = await httpModule.getJSON<AVWXResult>({
         url: `https://avwx.rest/api/metar/${airport}?onfail=cache&options=info&format=json`,
         method: 'GET',
@@ -73,7 +73,7 @@ export async function getAirportPressure(apiKey, airport: string) {
     return handleAVWXResut(result);
 }
 export async function getAirportPressureAtLocation(apiKey, lat: number, lon: number) {
-    const httpModule = await import('@nativescript/core/http');
+    const { httpModule } = await import('@nativescript/core');
     let result = await httpModule.getJSON<AVWXResult>({
         url: `https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`,
         method: 'GET',
