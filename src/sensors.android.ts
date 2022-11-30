@@ -1,6 +1,4 @@
-import { Trace } from '@nativescript/core';
-import lazy from '@nativescript/core/utils/lazy';
-import { ad } from '@nativescript/core/utils/utils';
+import { ad, lazy, Trace } from '@nativescript/core';
 import { CLog, CLogTypes } from './sensors.common';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 
