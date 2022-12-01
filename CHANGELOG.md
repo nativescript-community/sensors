@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.1](https://github.com/Akylas/nativescript-sensors/compare/v1.3.0...v1.3.1) (2022-12-01)
+
+
+### Bug Fixes
+
+* import from @nativescript/core ([109aab2](https://github.com/Akylas/nativescript-sensors/commit/109aab229eba0606e1851fd567ce9e0aa153d7f9))
+
+
+
+
+
 # [1.3.0](https://github.com/Akylas/nativescript-sensors/compare/v1.2.1...v1.3.0) (2022-11-29)
 
 
