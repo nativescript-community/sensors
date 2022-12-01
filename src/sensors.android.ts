@@ -1,4 +1,5 @@
-import { ad, lazy, Trace } from '@nativescript/core';
+import { Trace, Utils } from '@nativescript/core';
+import  lazy from '@nativescript/core/utils/lazy';
 import { CLog, CLogTypes } from './sensors.common';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 
@@ -33,7 +34,7 @@ export function getAltitude(pressure: number, airportPressure: number) {
 }
 function getSensorManager() {
     if (sensorManager == null) {
-        const context: android.content.Context = ad.getApplicationContext();
+        const context: android.content.Context = Utils.android.getApplicationContext();
         sensorManager = new com.nativescript.sensors.SensorManager(context);
     }
     return sensorManager;
