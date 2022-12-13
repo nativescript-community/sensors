@@ -30,8 +30,7 @@ let headingManager: CLLocationManager;
 class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerDelegate {
     public static ObjCProtocols = [CLLocationManagerDelegate];
     public static new() {
-        const listener = LocationHeadingListenerImpl.new() ;
-        return listener;
+        return LocationHeadingListenerImpl.new();
     }
     public locationManagerDidUpdateHeading?(manager: CLLocationManager, newHeading: CLHeading) {
         if (Trace.isEnabled()) {
