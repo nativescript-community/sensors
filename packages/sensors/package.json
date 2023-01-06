@@ -2,14 +2,21 @@
     "name": "@nativescript-community/sensors",
     "version": "1.2.1",
     "description": "Nativescript plugin for Carto Mobile SDK",
-    "main": "sensors",
-    "typings": "sensors.d.ts",
+    "main": "index",
+    "typings": "index.d.ts",
     "sideEffects": false,
     "nativescript": {
         "platforms": {
             "android": "4.2.0",
             "ios": "4.2.0"
         }
+    },
+    "scripts": {
+        "build": "npm run tsc",
+        "build.all": "npm run build",
+        "readme": "readme generate -c ../../tools/readme/blueprint.json",
+        "tsc": "cpy '**/*.d.ts' '../../packages/sensors' --parents --cwd=../../src/sensors && tsc -skipLibCheck -d",
+        "clean": "rimraf ./*.d.ts ./*.js ./*.js.map"
     },
     "keywords": [
         "NativeScript",

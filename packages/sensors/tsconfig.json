@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "../../src/sensors",
+        "outDir": "./",
+        "paths": {
+        }
+    },
+    "include": ["../../src/sensors/**/*", "../../references.d.ts", "../../tools/references.d.ts", "../../src/references.d.ts"],
+    "exclude": ["../../src/sensors/angular/**"]
+}

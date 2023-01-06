@@ -1,10 +1,9 @@
-import { Trace } from '@nativescript/core';
+import { Trace, Utils } from '@nativescript/core';
 import lazy from '@nativescript/core/utils/lazy';
-import { ad } from '@nativescript/core/utils/utils';
-import { CLog, CLogTypes } from './sensors.common';
+import { CLog, CLogTypes } from './index.common';
 let sensorManager: com.nativescript.sensors.SensorManager = null;
 
-export * from './sensors.common';
+export * from './index.common';
 
 export const SENSORS = [
     'linearAcceleration',
@@ -35,7 +34,7 @@ export function getAltitude(pressure: number, airportPressure: number) {
 }
 function getSensorManager() {
     if (sensorManager == null) {
-        const context: android.content.Context = ad.getApplicationContext();
+        const context: android.content.Context = Utils.android.getApplicationContext();
         sensorManager = new com.nativescript.sensors.SensorManager(context);
     }
     return sensorManager;
@@ -87,17 +86,23 @@ type SensorListener = {
     };
 };
 const listeners: SensorListener = {};
-export function startListeningForSensor(sensors: SensorType | SensorType[], listener: Function, updateInterval: number, maxReportLatency = 0, options?: {
-    headingFilter?: number;
-    headingTrueNorth?: boolean;
-    headingDistanceFilter?: number;
-    headingDistanceAccuracy?: number;
-}) {
+export function startListeningForSensor(
+    sensors: SensorType | SensorType[],
+    listener: Function,
+    updateInterval: number,
+    maxReportLatency = 0,
+    options?: {
+        headingFilter?: number;
+        headingTrueNorth?: boolean;
+        headingDistanceFilter?: number;
+        headingDistanceAccuracy?: number;
+    }
+) {
     if (!Array.isArray(sensors)) {
         sensors = [sensors];
     }
     return Promise.all(
-        sensors.map(sensor => {
+        sensors.map((sensor) => {
             if (!isSensorAvailable(sensor)) {
                 throw new Error(`sensor not available ${sensor}`);
             }
@@ -137,7 +142,7 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
         sensors = [sensors];
     }
     return Promise.all(
-        sensors.map(sensor => {
+        sensors.map((sensor) => {
             if (Trace.isEnabled()) {
                 CLog(CLogTypes.info, 'stopListeningForSensor', sensor, listeners[sensor]);
             }

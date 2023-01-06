@@ -1,16 +1,16 @@
 import { Trace } from '@nativescript/core';
-export const GPSTraceCategory = 'N-Sensors';
+export const SensorTraceCategory = 'N-Sensors';
 
 export enum CLogTypes {
     debug = Trace.messageType.log,
     log = Trace.messageType.log,
     info = Trace.messageType.info,
     warning = Trace.messageType.warn,
-    error = Trace.messageType.error,
+    error = Trace.messageType.error
 }
 
 export const CLog = (type: CLogTypes, ...args) => {
-    Trace.write(args.map(a=>(a && typeof a === 'object'? JSON.stringify(a) :a)).join(' '), GPSTraceCategory, type);
+    Trace.write(args.map((a) => (a && typeof a === 'object' ? JSON.stringify(a) : a)).join(' '), SensorTraceCategory, type);
 };
 
 /**
@@ -53,7 +53,7 @@ function handleAVWXResut(result: AVWXResult) {
         longitude: result.info.longitude,
         icao: result.info.icao,
         elevation: result.info.elevation_m,
-        pressure: result.altimeter.value,
+        pressure: result.altimeter.value
     };
 }
 
@@ -63,8 +63,8 @@ export async function getAirportPressure(apiKey, airport: string) {
         url: `https://avwx.rest/api/metar/${airport}?onfail=cache&options=info&format=json`,
         method: 'GET',
         headers: {
-            Authorization: apiKey,
-        },
+            Authorization: apiKey
+        }
     });
     // returned pressure is in inHg
     if (!result.altimeter) {
@@ -78,8 +78,8 @@ export async function getAirportPressureAtLocation(apiKey, lat: number, lon: num
         url: `https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`,
         method: 'GET',
         headers: {
-            Authorization: apiKey,
-        },
+            Authorization: apiKey
+        }
     });
     result = (result as any).sample || result;
     // console.log('getAirportPressureAtLocation', 'result', JSON.stringify(result));

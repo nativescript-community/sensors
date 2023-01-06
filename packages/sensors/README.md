@@ -1,4 +1,4 @@
-<!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️--><!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️-->
+<!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️-->
 <!--  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,9 +39,6 @@
 
 [](#table-of-contents)
 
-
-[](#table-of-contents)
-
 ## Table of Contents
 
 * [Installation](#installation)
@@ -62,16 +59,10 @@
 
 [](#installation)
 
-
-[](#installation)
-
 ## Installation
 Run the following command from the root of your project:
 
 `ns plugin add @nativescript-community/sensors`
-
-
-[](#usage)
 
 
 [](#usage)
@@ -94,9 +85,6 @@ stopListeningForSensor(sensor, this.onSensor);
 
 - [Basic](demo-snippets/vue/Basic.vue)
   - A basic sliding drawer.
-
-[](#demos-and-development)
-
 
 [](#demos-and-development)
 
@@ -138,9 +126,6 @@ npm run demo.svelte.ios # Example
 Demo setup is a bit special in the sense that if you want to modify/add demos you dont work directly in `demo-[ng|react|svelte|vue]`
 Instead you work in `demo-snippets/[ng|react|svelte|vue]`
 You can start from the `install.ts` of each flavor to see how to register new demos 
-
-
-[](#contributing)
 
 
 [](#contributing)
@@ -191,9 +176,6 @@ One easy solution is t modify `~/.gitconfig` and add
 [url "ssh://git@github.com/"]
 	pushInsteadOf = https://github.com/
 ```
-
-
-[](#questions)
 
 
 [](#questions)
