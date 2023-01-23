@@ -1,8 +1,8 @@
 {
     "uses":[
-        "android.hardware:GeomagneticField*",
-        "com.nativescript.sensors:SensorManager*",
-        "android.hardware:SensorManager*",
-        "android.hardware:GeomagneticField*"
+        "android.hardware:GeomagneticField",
+        "com.nativescript.sensors:SensorManager",
+        "android.hardware:SensorManager",
+        "android.hardware:GeomagneticField"
     ]
 }
