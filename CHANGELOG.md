@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.5](https://github.com/nativescript-community/sensors/compare/v1.3.4...v1.3.5) (2023-01-31)
+
+
+### Bug Fixes
+
+* import fix ([fbfe2f9](https://github.com/nativescript-community/sensors/commit/fbfe2f9e680460e88cdb2e6edcbe13e9a6ea4d96))
+
+
+
+
+
 ## [1.3.4](https://github.com/nativescript-community/sensors/compare/v1.3.3...v1.3.4) (2023-01-31)
 
 
