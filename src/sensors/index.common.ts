@@ -1,4 +1,4 @@
-import { Trace } from '@nativescript/core';
+import { Http, Trace } from '@nativescript/core';
 export const SensorTraceCategory = 'N-Sensors';
 
 export enum CLogTypes {
@@ -58,7 +58,6 @@ function handleAVWXResut(result: AVWXResult) {
 }
 
 export async function getAirportPressure(apiKey, airport: string) {
-    const { Http } = await import('@nativescript/core');
     const result = await Http.getJSON<AVWXResult>({
         url: `https://avwx.rest/api/metar/${airport}?onfail=cache&options=info&format=json`,
         method: 'GET',
@@ -73,7 +72,6 @@ export async function getAirportPressure(apiKey, airport: string) {
     return handleAVWXResut(result);
 }
 export async function getAirportPressureAtLocation(apiKey, lat: number, lon: number) {
-    const { Http } = await import('@nativescript/core');
     let result = await Http.getJSON<AVWXResult>({
         url: `https://avwx.rest/api/metar/${lat},${lon}?onfail=cache&options=info&format=json`,
         method: 'GET',
