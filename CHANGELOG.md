@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.4](https://github.com/nativescript-community/sensors/compare/v1.3.3...v1.3.4) (2023-01-31)
+
+
+### Bug Fixes
+
+* issue preventing @nativescript/core tree shaking ([b973178](https://github.com/nativescript-community/sensors/commit/b973178f274c94519d31cdab6f25dae8ecd34777))
+
+
+
+
+
 ## [1.3.3](https://github.com/nativescript-community/sensors/compare/v1.3.2...v1.3.3) (2023-01-23)
 
 
