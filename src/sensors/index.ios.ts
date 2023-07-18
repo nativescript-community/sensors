@@ -122,7 +122,7 @@ function onDeviceMotion(data: CMDeviceMotion, error: NSError) {
         return; // for now. Need error handling
     }
     const currentAttitude = data.attitude;
-    const realTimestamp = Math.round((bootTimestamp + data.timestamp) * 1000);
+    const realTimestamp = (bootTimestamp + data.timestamp) * 1000;
     if (listeners['orientation']) {
         const event = {
             accuracy: data.magneticField.accuracy,

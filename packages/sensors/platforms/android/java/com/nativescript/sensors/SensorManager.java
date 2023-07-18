@@ -744,7 +744,7 @@ public class SensorManager implements SensorEventListener {
                 myTimeReference = System.currentTimeMillis();
             }
             // set event timestamp to current time in milliseconds
-            event.timestamp = myTimeReference + Math.round((event.timestamp - sensorTimeReference) / 1000000.0);
+            event.timestamp = myTimeReference + ((event.timestamp - sensorTimeReference) / 1000000.0);
             long newSensorEventTimestamp = event.timestamp;// MICRO
             if (sensorType == Sensor.TYPE_GRAVITY) {
                 if (isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)
