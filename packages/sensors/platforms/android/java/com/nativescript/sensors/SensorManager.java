@@ -117,7 +117,7 @@ public class SensorManager implements SensorEventListener {
     private int motionRealNbSensors = motionSensors.size() + 1;
 
     private HashMap<Integer, float[]> mCurrentValues = new HashMap<Integer, float[]>();
-    private long lastTimeStamp = -1;
+    private double lastTimeStamp = -1;
 
     private HashMap<String, List<SensorManagerEventListener>> mListeners = new HashMap<>();
 
@@ -744,8 +744,8 @@ public class SensorManager implements SensorEventListener {
                 myTimeReference = System.currentTimeMillis();
             }
             // set event timestamp to current time in milliseconds
-            event.timestamp = myTimeReference + ((event.timestamp - sensorTimeReference) / 1000000.0);
-            long newSensorEventTimestamp = event.timestamp;// MICRO
+            // event.timestamp = myTimeReference + ((event.timestamp - sensorTimeReference) / 1000000.0);
+            double newSensorEventTimestamp = myTimeReference + (event.timestamp - sensorTimeReference) / 1000000.0;// MICRO
             if (sensorType == Sensor.TYPE_GRAVITY) {
                 if (isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)
                         && !mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
