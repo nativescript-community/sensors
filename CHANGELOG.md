@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.8](https://github.com/nativescript-community/sensors/compare/v1.3.7...v1.3.8) (2023-07-31)
+
+
+### Bug Fixes
+
+* **android:** only start thread when needed. Allow to set thread priority/name ([e96b1de](https://github.com/nativescript-community/sensors/commit/e96b1dec78a148f1a9d3389a66a6e0390307545c))
+
+
+
+
+
 ## [1.3.7](https://github.com/nativescript-community/sensors/compare/v1.3.6...v1.3.7) (2023-07-22)
 
 
