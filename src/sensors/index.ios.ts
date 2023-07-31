@@ -443,3 +443,10 @@ export function getAllavailableSensors() {
 export function flush() {
     // NOOP
 }
+export function setThreadPriority(priority: number) {
+    // NOOP
+}
+
+export function setThreadName(name: string) {
+    // NOOP
+}

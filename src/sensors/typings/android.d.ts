@@ -8,6 +8,8 @@ declare namespace com {
                 public static POSSIBLE_MOTION_SENSORS: java.util.List<string>;
                 public static ACCURACY_UNCALIBRATED: number;
                 public static STANDARD_GRAVITY: number;
+                public threadPriority: number;
+                public threadName: string;
                 public isSensorRegistered(param0: number): boolean;
                 public getDeviceSensors(): java.util.List<globalAndroid.hardware.Sensor>;
                 public removeListenerForSensor(param0: string, param1: sensors.SensorManager.SensorManagerEventListener): void;

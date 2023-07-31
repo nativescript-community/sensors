@@ -121,6 +121,10 @@ public class SensorManager implements SensorEventListener {
 
     private HashMap<String, List<SensorManagerEventListener>> mListeners = new HashMap<>();
 
+    protected HandlerThread mSensorThread;
+    public int threadPriority = Process.THREAD_PRIORITY_BACKGROUND;
+    public String threadName = "Nativescript Sensosr Thread";
+
     /*
      * Constructor. Since the class does not extend Application or Activity, we need
      * to context of the running process/app.
@@ -129,12 +133,26 @@ public class SensorManager implements SensorEventListener {
         // Get the SensorManager
         this.context = context;
         mSensorManager = (android.hardware.SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        // Setup our background thread for sensors
-        HandlerThread mSensorThread = new HandlerThread("Nativescript Sensosr Thread",
-                Process.THREAD_PRIORITY_BACKGROUND);
-        mSensorThread.start();
-        mSensorHandler = new Handler(mSensorThread.getLooper()); // Blocks until looper is prepared
-        // Log.d(TAG, "SensorManager HandlerThread: " + mSensorThread);
+    }
+
+    protected void startThread() {
+        if (mSensorThread != null) {
+            mSensorThread = new HandlerThread(threadName, threadPriority);
+            mSensorThread.start();
+            mSensorHandler = new Handler(mSensorThread.getLooper());
+        }
+    }
+    protected void stopThread() {
+        if (mSensorThread != null) {
+            mSensorThread.quitSafely();
+            mSensorThread = null;
+            mSensorHandler = null;
+        }
+    }
+    protected void checkAndStopThread() {
+        if (mRegisteredSensors.size() == 0 ) {
+            stopThread();
+        }
     }
 
     protected void fireEvent(String event, HashMap data) {
@@ -348,12 +366,16 @@ public class SensorManager implements SensorEventListener {
             // calling multiple register on the same sensor will fail
             boolean didRegister = mRegisteredSensors.containsKey(sensor);
             if (!didRegister) {
+                startThread();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000,
                             maxReportLatencyMs * 1000, mSensorHandler);
                 } else {
                     didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000,
                             mSensorHandler);
+                }
+                if (!didRegister) {
+                    checkAndStopThread();
                 }
             }
 
@@ -397,6 +419,7 @@ public class SensorManager implements SensorEventListener {
             if (defaultSensor != null) {
                 mSensorManager.unregisterListener(this, defaultSensor);
             }
+            checkAndStopThread();
         }
 
     }
@@ -908,5 +931,4 @@ public class SensorManager implements SensorEventListener {
             }
         }
     }
-
 }

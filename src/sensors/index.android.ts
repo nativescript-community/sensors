@@ -48,6 +48,20 @@ function hasSensor(type: SensorType) {
     return sensorManager.hasSensor(type);
 }
 
+export function setThreadPriority(priority: number) {
+    const sensorManager = getSensorManager();
+    if (sensorManager != null) {
+        sensorManager.threadPriority = priority;
+    }
+}
+
+export function setThreadName(name: string) {
+    const sensorManager = getSensorManager();
+    if (sensorManager != null) {
+        sensorManager.threadName = name;
+    }
+}
+
 export function isSensorAvailable(sensor: SensorType) {
     return hasSensor(sensor);
 }
