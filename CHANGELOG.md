@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.9](https://github.com/nativescript-community/sensors/compare/v1.3.8...v1.3.9) (2023-08-09)
+
+
+### Bug Fixes
+
+* **android:** we now use the current thread so it will work with workers. Also we use JSONObject to communicate between JS/Java now so it should be faster ([e18796e](https://github.com/nativescript-community/sensors/commit/e18796e442c0b371f2d94a1009be939a3987ae04))
+
+
+
+
+
 ## [1.3.8](https://github.com/nativescript-community/sensors/compare/v1.3.7...v1.3.8) (2023-07-31)
 
 
