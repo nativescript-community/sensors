@@ -450,3 +450,6 @@ export function setThreadPriority(priority: number) {
 export function setThreadName(name: string) {
     // NOOP
 }
+export function setUseCurrentThreadLooper(value: boolean) {
+    // NOOP
+}

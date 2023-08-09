@@ -1,5 +1,3 @@
-
-
 declare namespace com {
     export namespace nativescript {
         export namespace sensors {
@@ -10,6 +8,7 @@ declare namespace com {
                 public static STANDARD_GRAVITY: number;
                 public threadPriority: number;
                 public threadName: string;
+                public useCurrentThreadLooper: boolean;
                 public isSensorRegistered(param0: number): boolean;
                 public getDeviceSensors(): java.util.List<globalAndroid.hardware.Sensor>;
                 public removeListenerForSensor(param0: string, param1: sensors.SensorManager.SensorManagerEventListener): void;
@@ -25,19 +24,17 @@ declare namespace com {
                 public addListenerForSensor(param0: string, param1: sensors.SensorManager.SensorManagerEventListener, param2: number, param3: number): boolean;
                 public flush(): boolean;
                 public hasEvenListener(param0: string): boolean;
-                public setHeadingFilter( value: number);
+                public setHeadingFilter(value: number);
                 public constructor(param0: globalAndroid.content.Context);
             }
             export namespace SensorManager {
                 export class SensorManagerEventListener extends java.lang.Object {
                     public static class: java.lang.Class<sensors.SensorManager.SensorManagerEventListener>;
                     /**
-					 * Constructs a new instance of the com.nativescript.sensors.SensorManager$SensorManagerEventListener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
-					 */
-                    public constructor(implementation?: {
-                        onEventData(param0: java.util.HashMap<any, any>, event: string): void;
-                    });
-                    public onEventData(param0: java.util.HashMap<any, any>, event: string): void;
+                     * Constructs a new instance of the com.nativescript.sensors.SensorManager$SensorManagerEventListener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+                     */
+                    public constructor(implementation?: { onEventData(datastring: string, data: org.json.JSONObject, event: string): void });
+                    public onEventData(datastring: string, data: org.json.JSONObject, event: string): void;
                 }
             }
         }
@@ -45,4 +42,3 @@ declare namespace com {
 }
 
 //Generics information:
-

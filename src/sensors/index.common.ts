@@ -11,7 +11,7 @@ export enum CLogTypes {
 }
 
 export const CLog = (type: CLogTypes, ...args) => {
-    Trace.write(args.map((a) => (a && typeof a === 'object' ? JSON.stringify(a) : a)).join(' '), SensorTraceCategory, type);
+    Trace.write(args.join(' '), SensorTraceCategory, type);
 };
 
 /**

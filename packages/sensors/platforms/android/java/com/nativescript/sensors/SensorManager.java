@@ -20,6 +20,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
+
 public class SensorManager implements SensorEventListener {
 
     private static final String PROPERTY_X = "x";
@@ -82,7 +86,7 @@ public class SensorManager implements SensorEventListener {
     private static String TAG = "SensorManager";
 
     public interface SensorManagerEventListener {
-        void onEventData(HashMap data, String event);
+        void onEventData(String datastring, JSONObject data, String event);
 
     }
 
@@ -124,6 +128,7 @@ public class SensorManager implements SensorEventListener {
     protected HandlerThread mSensorThread;
     public int threadPriority = Process.THREAD_PRIORITY_BACKGROUND;
     public String threadName = "Nativescript Sensosr Thread";
+    public boolean useCurrentThreadLooper = true;
 
     /*
      * Constructor. Since the class does not extend Application or Activity, we need
@@ -136,17 +141,24 @@ public class SensorManager implements SensorEventListener {
     }
 
     protected void startThread() {
-        if (mSensorThread != null) {
-            mSensorThread = new HandlerThread(threadName, threadPriority);
-            mSensorThread.start();
-            mSensorHandler = new Handler(mSensorThread.getLooper());
+        if (mSensorHandler == null) {
+            if (useCurrentThreadLooper) {
+                mSensorHandler = new Handler(android.os.Looper.myLooper());
+            // } else {
+            //     mSensorThread = new HandlerThread(threadName, threadPriority);
+            //     mSensorThread.start();
+            //     mSensorHandler = new Handler(mSensorThread.getLooper());
+            }
+            // other wise main thread will be used by default by the SensorManager
         }
     }
     protected void stopThread() {
+        if (mSensorHandler != null) {
+            mSensorHandler = null;
+        }
         if (mSensorThread != null) {
             mSensorThread.quitSafely();
             mSensorThread = null;
-            mSensorHandler = null;
         }
     }
     protected void checkAndStopThread() {
@@ -155,11 +167,11 @@ public class SensorManager implements SensorEventListener {
         }
     }
 
-    protected void fireEvent(String event, HashMap data) {
+    protected void fireEvent(String event, JSONObject data) {
         List<SensorManagerEventListener> listeners = mListeners.get(event);
         if (listeners != null) {
             for (int i = 0; i < listeners.size(); i++) {
-                listeners.get(i).onEventData(data, event);
+                listeners.get(i).onEventData(data.toString(), data, event);
             }
         }
     }
@@ -354,19 +366,20 @@ public class SensorManager implements SensorEventListener {
                 startSteps = 0;
                 steperStartTime = (new Date()).getTime();
             }
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " +
-            // defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " +
-            // maxReportLatencyMs + ", " + defaultSensor);
-            // } else {
-            // Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", "
-                    // + maxReportLatencyMs + ", " + defaultSensor);
-            // }
+            
 
             // calling multiple register on the same sensor will fail
             boolean didRegister = mRegisteredSensors.containsKey(sensor);
             if (!didRegister) {
                 startThread();
+                // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                //     Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor)+ ", " +
+                //         defaultSensor.getFifoMaxEventCount() + ", " + sensorDelayMS + ", " +
+                //         maxReportLatencyMs + ", " + defaultSensor + ", " + mSensorHandler);
+                // } else {
+                //     Log.d(TAG, "startSensor " + sensor + ", " + eventProperty(sensor) + ", " + sensorDelayMS + ", "
+                //         + maxReportLatencyMs + ", " + defaultSensor + ", " + mSensorHandler);
+                // }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     didRegister = mSensorManager.registerListener(this, defaultSensor, sensorDelayMS * 1000,
                             maxReportLatencyMs * 1000, mSensorHandler);
@@ -446,8 +459,8 @@ public class SensorManager implements SensorEventListener {
         }
     }
 
-    private HashMap eventToMap(int type, float[] values, Integer eventAccuracy) {
-        HashMap sensordata = new HashMap();
+    private JSONObject eventToJSON(int type, float[] values, Integer eventAccuracy) throws JSONException {
+        JSONObject sensordata = new JSONObject();
         if (eventAccuracy != null) {
             sensordata.put(PROPERTY_ACCURACY, eventAccuracy);
         }
@@ -509,15 +522,15 @@ public class SensorManager implements SensorEventListener {
                 sensordata.put(PROPERTY_X, x + gx);
                 sensordata.put(PROPERTY_Y, y + gy);
                 sensordata.put(PROPERTY_Z, z + gz);
-                HashMap useracc = new HashMap();
+                JSONObject useracc = new JSONObject();
                 useracc.put(PROPERTY_X, x);
                 useracc.put(PROPERTY_Y, y);
                 useracc.put(PROPERTY_Z, z);
-                HashMap gacc = new HashMap();
+                JSONObject gacc = new JSONObject();
                 gacc.put(PROPERTY_X, gx);
                 gacc.put(PROPERTY_Y, gy);
                 gacc.put(PROPERTY_Z, gz);
-                HashMap raw = new HashMap();
+                JSONObject raw = new JSONObject();
                 raw.put(PROPERTY_X, values[0]);
                 raw.put(PROPERTY_Y, values[1]);
                 raw.put(PROPERTY_Z, values[2]);
@@ -620,19 +633,19 @@ public class SensorManager implements SensorEventListener {
                     temporaryQuaternion = new float[4];
                 }
                 android.hardware.SensorManager.getQuaternionFromVector(temporaryQuaternion, values);
-                sensordata.put("quaternion", temporaryQuaternion);
+                sensordata.put("quaternion", new JSONArray(temporaryQuaternion));
                 sensordata.put(PROPERTY_ACCURACY, currentMagnetometerAccuracy);
                 if (computeRotationMatrix) {
                     if (mRotationMatrix == null) {
                         mRotationMatrix = new float[16];
                     }
                     android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix, values);
-                    sensordata.put("rotationMatrix", mRotationMatrix);
+                    sensordata.put("rotationMatrix", new JSONArray(mRotationMatrix));
                     if (mOrientation == null) {
                         mOrientation = new float[3];
                     }
                     android.hardware.SensorManager.getOrientation(mRotationMatrix, mOrientation);
-                    sensordata.put("orientation", mOrientation);
+                    sensordata.put("orientation", new JSONArray(mOrientation));
                 }
 
             }
@@ -758,176 +771,185 @@ public class SensorManager implements SensorEventListener {
         return bearing;
     }
 
+    private HashMap<Integer, Double> mLastTimestamps = new HashMap<>();
     public void onSensorChanged(SensorEvent event) {
         synchronized (valuesLock) {
-            final int sensorType = event.sensor.getType();
-            final String type = eventProperty(sensorType);
-            if (sensorTimeReference == 0l && myTimeReference == 0l) {
-                sensorTimeReference = event.timestamp;
-                myTimeReference = System.currentTimeMillis();
-            }
-            // set event timestamp to current time in milliseconds
-            // event.timestamp = myTimeReference + ((event.timestamp - sensorTimeReference) / 1000000.0);
-            double newSensorEventTimestamp = myTimeReference + (event.timestamp - sensorTimeReference) / 1000000.0;// MICRO
-            if (sensorType == Sensor.TYPE_GRAVITY) {
-                if (isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)
-                        && !mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
-                    // gravity values are inversed!
-                    float[] gravs = event.values.clone();
-                    gravs[0] *= -1;
-                    gravs[1] *= -1;
-                    gravs[2] *= -1;
-                    mCurrentValues.put(sensorType, gravs);
+            try {
+                final int sensorType = event.sensor.getType();
+                final String type = eventProperty(sensorType);
+                if (sensorTimeReference == 0l && myTimeReference == 0l) {
+                    sensorTimeReference = event.timestamp;
+                    myTimeReference = System.currentTimeMillis();
                 }
-            }
-            if (sensorType == Sensor.TYPE_ACCELEROMETER) {
-                if (hasEvenListener(EVENT_HEADING)) {
-                    float[] gravity = new float[] { event.values[0], event.values[1], event.values[2] };
-
-                    // if (lastKnownField != null) {
-                    //     Vector field = new Vector(lastKnownField[0], lastKnownField[1], lastKnownField[2]);
-                    //     double bearing = calculateBearing(field, new Vector(gravity[0], gravity[1], gravity[2]));
-                    //     if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
-                    //         mLastBearing = bearing;
-                    //         HashMap data = new HashMap();
-                    //         data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
-                    //         data.put(PROPERTY_ACCURACY,
-                    //                 Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
-                    //         data.put(PROPERTY_HEADING, bearing);
-                    //         fireEvent(EVENT_HEADING, data);
-                    //     }
-                    // }
-                    lastKnownGravity = gravity;
-                }
-            }
-            if (sensorType == Sensor.TYPE_MAGNETIC_FIELD) {
-                if (hasEvenListener(EVENT_HEADING)) {
-                    float[] field = new float[] { event.values[0], event.values[1], event.values[2] };
-
-                    if (lastKnownGravity != null) {
-                        Vector gravity = new Vector(lastKnownGravity[0], lastKnownGravity[1], lastKnownGravity[2]);
-                        double bearing = calculateBearing(new Vector(field[0], field[1], field[2]), gravity);
-                        if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
-                            mLastBearing = bearing;
-                            HashMap data = new HashMap();
-                            data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
-                            data.put(PROPERTY_ACCURACY,
-                                    Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
-                            data.put(PROPERTY_HEADING, bearing);
-                            fireEvent(EVENT_HEADING, data);
-                        }
-                    }
-
-                    lastKnownField = field;
-                }
-            }
-            // SECONDS
-            if (mListeners.containsKey(type)) {
-
-                HashMap sensordata = null;
-
-                if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
-                    if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
-                        return;
-                    }
-                    sensordata = eventToMap(sensorType, event.values, event.accuracy);
-                    mCurrentValues.remove(Sensor.TYPE_GRAVITY);
-                } else {
-                    sensordata = eventToMap(sensorType, event.values, event.accuracy);
-                }
-
-                if (sensordata != null) {
-                    sensordata.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
-                    fireEvent(type, sensordata);
-                }
-                return;
-            }
-            if (hasEvenListener(EVENT_MOTION)) {
-                // Log.d(TAG, "Motion go event " + sensorType + ", " +
-                // mCurrentValues.containsKey(sensorType));
-                if (mCurrentValues.containsKey(sensorType))
-                    return;
-
-                float[] values = event.values.clone();
-                if (sensorType == Sensor.TYPE_GRAVITY) {
-                    // gravity values are inversed!
-                    values[0] *= -1;
-                    values[1] *= -1;
-                    values[2] *= -1;
-                }
-                mCurrentValues.put(sensorType, values);
-
-                if (mCurrentValues.size() != motionRealNbSensors)
-                    return;
-
-                // long deltaTime = (newSensorEventTimestamp - lastTimeStamp); // MILLI
-                // SECONDS
-                // if (lastTimeStamp != -1 && deltaTime < updateInterval) {
-                // mCurrentValues.clear();
-                // return;
+                // set event timestamp to current time in milliseconds
+                // event.timestamp = myTimeReference + ((event.timestamp - sensorTimeReference) / 1000000.0);
+                double newSensorEventTimestamp = myTimeReference + (event.timestamp - sensorTimeReference) / 1000000.0;// MICRO
+                Integer key = new Integer(sensorType);
+                // if (mLastTimestamps.containsKey(key)) {
+                //     Log.d(TAG, "onSensorChanged " + sensorType + ", " + (newSensorEventTimestamp - mLastTimestamps.get(key)) + " " +android.os.Looper.myLooper() + " " + android.os.Looper.getMainLooper());
                 // }
-
-                HashMap data = new HashMap();
-                data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
-                data.put(PROPERTY_ACCURACY, event.accuracy);
-
-                HashMap sensordata;
-
-                // ACCELEROMETER
-                if (mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
-                    sensordata = eventToMap(Sensor.TYPE_LINEAR_ACCELERATION,
-                            mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION), null);
-                    data.put(EVENT_ACC, sensordata);
+                // mLastTimestamps.put(key, newSensorEventTimestamp);
+                if (sensorType == Sensor.TYPE_GRAVITY) {
+                    if (isSensorRegistered(Sensor.TYPE_LINEAR_ACCELERATION)
+                            && !mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
+                        // gravity values are inversed!
+                        float[] gravs = event.values.clone();
+                        gravs[0] *= -1;
+                        gravs[1] *= -1;
+                        gravs[2] *= -1;
+                        mCurrentValues.put(sensorType, gravs);
+                    }
                 }
+                if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+                    if (hasEvenListener(EVENT_HEADING)) {
+                        float[] gravity = new float[] { event.values[0], event.values[1], event.values[2] };
 
-                // GYROSCOPE
-                if (mCurrentValues.get(Sensor.TYPE_GYROSCOPE) != null) {
-                    // sensordata = eventToMap(Sensor.TYPE_GYROSCOPE,
-                    // mCurrentValues.get(Sensor.TYPE_GYROSCOPE), null);
-                    data.put(EVENT_GYRO, mCurrentValues.get(Sensor.TYPE_GYROSCOPE));
+                        // if (lastKnownField != null) {
+                        //     Vector field = new Vector(lastKnownField[0], lastKnownField[1], lastKnownField[2]);
+                        //     double bearing = calculateBearing(field, new Vector(gravity[0], gravity[1], gravity[2]));
+                        //     if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
+                        //         mLastBearing = bearing;
+                        //         HashMap data = new HashMap();
+                        //         data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                        //         data.put(PROPERTY_ACCURACY,
+                        //                 Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
+                        //         data.put(PROPERTY_HEADING, bearing);
+                        //         fireEvent(EVENT_HEADING, data);
+                        //     }
+                        // }
+                        lastKnownGravity = gravity;
+                    }
                 }
+                if (sensorType == Sensor.TYPE_MAGNETIC_FIELD) {
+                    if (hasEvenListener(EVENT_HEADING)) {
+                        float[] field = new float[] { event.values[0], event.values[1], event.values[2] };
 
-                // ORIENTATION
-                if (mCurrentValues.get(Sensor.TYPE_ORIENTATION) != null) {
-                    // sensordata = eventToMap(Sensor.TYPE_ORIENTATION,
-                    // mCurrentValues.get(Sensor.TYPE_ORIENTATION), null);
-                    data.put(EVENT_ORIENTATION, mCurrentValues.get(Sensor.TYPE_ORIENTATION));
-                }
-
-                // MAGNETIC_FIELD
-                if (mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD) != null) {
-                    sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD, mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD),
-                            null);
-                    data.put(EVENT_MAG, sensordata);
-                }
-
-                // GRAVITY
-                if (mCurrentValues.get(Sensor.TYPE_GRAVITY) != null) {
-                    // sensordata = eventToMap(Sensor.TYPE_MAGNETIC_FIELD,
-                    // mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD), null);
-                    data.put(EVENT_MAG, mCurrentValues.get(Sensor.TYPE_GRAVITY));
-                }
-
-                if (mCurrentValues.get(Sensor.TYPE_ROTATION_VECTOR) != null) {
-                    float[] quat = mCurrentValues.get(Sensor.TYPE_ROTATION_VECTOR);
-                    data.put("quaternion", quat);
-                    if (computeRotationMatrix) {
-                        if (mRotationMatrix == null) {
-                            mRotationMatrix = new float[16];
+                        if (lastKnownGravity != null) {
+                            Vector gravity = new Vector(lastKnownGravity[0], lastKnownGravity[1], lastKnownGravity[2]);
+                            double bearing = calculateBearing(new Vector(field[0], field[1], field[2]), gravity);
+                            if (Math.abs(mLastBearing - bearing) >= mHeadingFilter) {
+                                mLastBearing = bearing;
+                                JSONObject data = new JSONObject();
+                                data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                                data.put(PROPERTY_ACCURACY,
+                                        Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
+                                data.put(PROPERTY_HEADING, bearing);
+                                fireEvent(EVENT_HEADING, data);
+                            }
                         }
-                        android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix, quat);
-                        data.put("rotationMatrix", mRotationMatrix);
-                        if (mOrientation == null) {
-                            mOrientation = new float[3];
+
+                        lastKnownField = field;
+                    }
+                }
+                // SECONDS
+                if (mListeners.containsKey(type)) {
+
+                    JSONObject sensordata = null;
+
+                    if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION && isSensorRegistered(Sensor.TYPE_GRAVITY)) {
+                        if (!mCurrentValues.containsKey(Sensor.TYPE_GRAVITY)) {
+                            return;
                         }
-                        android.hardware.SensorManager.getOrientation(mRotationMatrix, mOrientation);
-                        data.put("orientation", mOrientation);
+                        sensordata = eventToJSON(sensorType, event.values, event.accuracy);
+                        mCurrentValues.remove(Sensor.TYPE_GRAVITY);
+                    } else {
+                        sensordata = eventToJSON(sensorType, event.values, event.accuracy);
                     }
 
+                    if (sensordata != null) {
+                        sensordata.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                        fireEvent(type, sensordata);
+                    }
+                    return;
                 }
-                lastTimeStamp = newSensorEventTimestamp;
-                mCurrentValues.clear();
-                fireEvent(EVENT_MOTION, data);
+                if (hasEvenListener(EVENT_MOTION)) {
+                    // Log.d(TAG, "Motion go event " + sensorType + ", " +
+                    // mCurrentValues.containsKey(sensorType));
+                    if (mCurrentValues.containsKey(sensorType))
+                        return;
+
+                    float[] values = event.values.clone();
+                    if (sensorType == Sensor.TYPE_GRAVITY) {
+                        // gravity values are inversed!
+                        values[0] *= -1;
+                        values[1] *= -1;
+                        values[2] *= -1;
+                    }
+                    mCurrentValues.put(sensorType, values);
+
+                    if (mCurrentValues.size() != motionRealNbSensors)
+                        return;
+
+                    // long deltaTime = (newSensorEventTimestamp - lastTimeStamp); // MILLI
+                    // SECONDS
+                    // if (lastTimeStamp != -1 && deltaTime < updateInterval) {
+                    // mCurrentValues.clear();
+                    // return;
+                    // }
+
+                    JSONObject data = new JSONObject();
+                    data.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
+                    data.put(PROPERTY_ACCURACY, event.accuracy);
+
+                    JSONObject sensordata;
+
+                    // ACCELEROMETER
+                    if (mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
+                        sensordata = eventToJSON(Sensor.TYPE_LINEAR_ACCELERATION,
+                                mCurrentValues.get(Sensor.TYPE_LINEAR_ACCELERATION), null);
+                        data.put(EVENT_ACC, sensordata);
+                    }
+
+                    // GYROSCOPE
+                    if (mCurrentValues.get(Sensor.TYPE_GYROSCOPE) != null) {
+                        // sensordata = eventToJSON(Sensor.TYPE_GYROSCOPE,
+                        // mCurrentValues.get(Sensor.TYPE_GYROSCOPE), null);
+                        data.put(EVENT_GYRO, mCurrentValues.get(Sensor.TYPE_GYROSCOPE));
+                    }
+
+                    // ORIENTATION
+                    if (mCurrentValues.get(Sensor.TYPE_ORIENTATION) != null) {
+                        // sensordata = eventToJSON(Sensor.TYPE_ORIENTATION,
+                        // mCurrentValues.get(Sensor.TYPE_ORIENTATION), null);
+                        data.put(EVENT_ORIENTATION, mCurrentValues.get(Sensor.TYPE_ORIENTATION));
+                    }
+
+                    // MAGNETIC_FIELD
+                    if (mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD) != null) {
+                        sensordata = eventToJSON(Sensor.TYPE_MAGNETIC_FIELD, mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD),
+                                null);
+                        data.put(EVENT_MAG, sensordata);
+                    }
+
+                    // GRAVITY
+                    if (mCurrentValues.get(Sensor.TYPE_GRAVITY) != null) {
+                        // sensordata = eventToJSON(Sensor.TYPE_MAGNETIC_FIELD,
+                        // mCurrentValues.get(Sensor.TYPE_MAGNETIC_FIELD), null);
+                        data.put(EVENT_MAG, mCurrentValues.get(Sensor.TYPE_GRAVITY));
+                    }
+
+                    if (mCurrentValues.get(Sensor.TYPE_ROTATION_VECTOR) != null) {
+                        float[] quat = mCurrentValues.get(Sensor.TYPE_ROTATION_VECTOR);
+                        data.put("quaternion", new JSONArray(quat));
+                        if (computeRotationMatrix) {
+                            if (mRotationMatrix == null) {
+                                mRotationMatrix = new float[16];
+                            }
+                            android.hardware.SensorManager.getRotationMatrixFromVector(mRotationMatrix, quat);
+                            data.put("rotationMatrix", mRotationMatrix);
+                            if (mOrientation == null) {
+                                mOrientation = new float[3];
+                            }
+                            android.hardware.SensorManager.getOrientation(mRotationMatrix, mOrientation);
+                            data.put("orientation", mOrientation);
+                        }
+
+                    }
+                    lastTimeStamp = newSensorEventTimestamp;
+                    mCurrentValues.clear();
+                    fireEvent(EVENT_MOTION, data);
+                }
+            } catch (JSONException ignore) {
             }
         }
     }

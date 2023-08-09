@@ -61,6 +61,12 @@ export function setThreadName(name: string) {
         sensorManager.threadName = name;
     }
 }
+export function setUseCurrentThreadLooper(value: boolean) {
+    const sensorManager = getSensorManager();
+    if (sensorManager != null) {
+        sensorManager.useCurrentThreadLooper = value;
+    }
+}
 
 export function isSensorAvailable(sensor: SensorType) {
     return hasSensor(sensor);
@@ -102,7 +108,7 @@ type SensorListener = {
 const listeners: SensorListener = {};
 export function startListeningForSensor(
     sensors: SensorType | SensorType[],
-    listener: Function,
+    listener: Function | com.nativescript.sensors.SensorManager.SensorManagerEventListener,
     updateInterval: number,
     maxReportLatency = 0,
     options?: {
@@ -125,15 +131,21 @@ export function startListeningForSensor(
             // else if (updateInterval < 70) newSensorDelay = android.hardware.SensorManager.SENSOR_DELAY_GAME;
             // else if (updateInterval < 200) newSensorDelay = android.hardware.SensorManager.SENSOR_DELAY_UI;
             // else newSensorDelay = android.hardware.SensorManager.SENSOR_DELAY_NORMAL;
-
-            const androidListener = new com.nativescript.sensors.SensorManager.SensorManagerEventListener({
-                onEventData(data, event) {
-                    listener(androidHashMapToJson(data), event);
-                }
-            });
-            if (Trace.isEnabled()) {
-                CLog(CLogTypes.info, 'addListenerForSensor', sensor, androidListener, updateInterval, maxReportLatency);
+            let androidListener;
+            if (listener instanceof com.nativescript.sensors.SensorManager) {
+                androidListener = listener;
+            } else {
+                androidListener = new com.nativescript.sensors.SensorManager.SensorManagerEventListener({
+                    onEventData(datastring, data, event) {
+                        // console.log('onEventData', data);
+                        (listener as Function)(JSON.parse(datastring), event);
+                    }
+                });
             }
+            if (Trace.isEnabled()) {
+                CLog(CLogTypes.info, 'addListenerForSensor', sensor, listener, androidListener, updateInterval, maxReportLatency);
+            }
+            // console.log('addListenerForSensor', sensor, listener, androidListener, updateInterval, maxReportLatency);
             if (sensor === 'heading') {
                 if (options && 'headingFilter' in options) {
                     getSensorManager().setHeadingFilter(options.headingFilter);
@@ -143,8 +155,9 @@ export function startListeningForSensor(
             if (result) {
                 listeners[sensor] = listeners[sensor] || { jsListeners: [], androidListeners: [] };
 
-                listeners[sensor].jsListeners.push(listener);
+                listeners[sensor].jsListeners.push(listener as any);
                 listeners[sensor].androidListeners.push(androidListener);
+                // console.log('stored listener', listener, androidListener, listeners[sensor]);
             }
             return Promise.resolve(result);
         })
