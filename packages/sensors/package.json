@@ -34,6 +34,6 @@
     "homepage": "https://github.com/nativescript-community/sensors",
     "bootstrapper": "nativescript-plugin-seed",
     "dependencies": {
-        "@nativescript-community/perms": "^2.1.0"
+        "@nativescript-community/perms": "^2.3.0"
     }
 }
