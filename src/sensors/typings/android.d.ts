@@ -8,7 +8,7 @@ declare namespace com {
                 public static STANDARD_GRAVITY: number;
                 public threadPriority: number;
                 public threadName: string;
-                public useCurrentThreadLooper: boolean;
+                public useSeparatedThread: boolean;
                 public isSensorRegistered(param0: number): boolean;
                 public getDeviceSensors(): java.util.List<globalAndroid.hardware.Sensor>;
                 public removeListenerForSensor(param0: string, param1: sensors.SensorManager.SensorManagerEventListener): void;

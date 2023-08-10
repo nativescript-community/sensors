@@ -61,10 +61,10 @@ export function setThreadName(name: string) {
         sensorManager.threadName = name;
     }
 }
-export function setUseCurrentThreadLooper(value: boolean) {
+export function setUseSeparatedThread(value: boolean) {
     const sensorManager = getSensorManager();
     if (sensorManager != null) {
-        sensorManager.useCurrentThreadLooper = value;
+        sensorManager.useSeparatedThread = value;
     }
 }
 

@@ -128,7 +128,7 @@ public class SensorManager implements SensorEventListener {
     protected HandlerThread mSensorThread;
     public int threadPriority = Process.THREAD_PRIORITY_BACKGROUND;
     public String threadName = "Nativescript Sensosr Thread";
-    public boolean useCurrentThreadLooper = true;
+    public boolean useSeparatedThread = false;
 
     /*
      * Constructor. Since the class does not extend Application or Activity, we need
@@ -142,12 +142,12 @@ public class SensorManager implements SensorEventListener {
 
     protected void startThread() {
         if (mSensorHandler == null) {
-            if (useCurrentThreadLooper) {
+            if (useSeparatedThread) {
+                mSensorThread = new HandlerThread(threadName, threadPriority);
+                mSensorThread.start();
+                mSensorHandler = new Handler(mSensorThread.getLooper());
+            } else {
                 mSensorHandler = new Handler(android.os.Looper.myLooper());
-            // } else {
-            //     mSensorThread = new HandlerThread(threadName, threadPriority);
-            //     mSensorThread.start();
-            //     mSensorHandler = new Handler(mSensorThread.getLooper());
             }
             // other wise main thread will be used by default by the SensorManager
         }
