@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.10](https://github.com/nativescript-community/sensors/compare/v1.3.9...v1.3.10) (2023-08-10)
+
+
+### Bug Fixes
+
+* removed `useCurrentThreadLooper` property and added `useSeparatedThread` instead. Current thread looper is now the default on android ([f4f5985](https://github.com/nativescript-community/sensors/commit/f4f59852eaf0f360b48893c5928d4587056d7c21))
+
+
+
+
+
 ## [1.3.9](https://github.com/nativescript-community/sensors/compare/v1.3.8...v1.3.9) (2023-08-09)
 
 
