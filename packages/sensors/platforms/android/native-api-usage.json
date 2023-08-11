@@ -2,6 +2,8 @@
     "uses":[
         "android.hardware:GeomagneticField",
         "com.nativescript.sensors:SensorManager",
+        "com.nativescript.sensors:SensorManager.SensorManagerEventListener",
+        "com.nativescript.sensors:SensorManager.SensorManagerNativeEventListener",
         "android.hardware:SensorManager",
         "android.hardware:GeomagneticField"
     ]
