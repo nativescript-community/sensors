@@ -44,7 +44,7 @@ class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerD
             y: newHeading.y,
             z: newHeading.z
         };
-        fireEvent('barometer', event);
+        fireEvent('heading', event);
     }
 
     public locationManagerShouldDisplayHeadingCalibration(manager: CLLocationManager) {
