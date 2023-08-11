@@ -132,13 +132,14 @@ export function startListeningForSensor(
             // else if (updateInterval < 200) newSensorDelay = android.hardware.SensorManager.SENSOR_DELAY_UI;
             // else newSensorDelay = android.hardware.SensorManager.SENSOR_DELAY_NORMAL;
             let androidListener;
-            if (listener instanceof com.nativescript.sensors.SensorManager) {
+            if (typeof listener === 'object') {
+                //native interface
                 androidListener = listener;
             } else {
                 androidListener = new com.nativescript.sensors.SensorManager.SensorManagerEventListener({
                     onEventData(datastring, data, event) {
                         // console.log('onEventData', data);
-                        (listener as Function)(JSON.parse(datastring), event);
+                        listener(JSON.parse(datastring), event);
                     }
                 });
             }
@@ -164,7 +165,7 @@ export function startListeningForSensor(
     );
 }
 
-export function stopListeningForSensor(sensors: SensorType | SensorType[], listener: Function) {
+export function stopListeningForSensor(sensors: SensorType | SensorType[], listener: Function | com.nativescript.sensors.SensorManager.SensorManagerEventListener) {
     if (!Array.isArray(sensors)) {
         sensors = [sensors];
     }
@@ -174,7 +175,7 @@ export function stopListeningForSensor(sensors: SensorType | SensorType[], liste
                 CLog(CLogTypes.info, 'stopListeningForSensor', sensor, listeners[sensor]);
             }
             if (sensor && listeners[sensor]) {
-                const index = listeners[sensor].jsListeners.indexOf(listener);
+                const index = listeners[sensor].jsListeners.indexOf(listener as any);
                 if (index !== -1) {
                     const androidListener = listeners[sensor].androidListeners[index];
                     if (Trace.isEnabled()) {

@@ -86,8 +86,10 @@ public class SensorManager implements SensorEventListener {
     private static String TAG = "SensorManager";
 
     public interface SensorManagerEventListener {
-        void onEventData(String datastring, JSONObject data, String event);
-
+        void onEventData(String datastring, JSONObject data, String event, double newSensorEventTimestamp, SensorEvent sensorEvent);
+    }
+    public interface SensorManagerNativeEventListener extends SensorManagerEventListener {
+        void onEventData(JSONObject data, String event, double newSensorEventTimestamp, SensorEvent sensorEvent);
     }
 
     private Handler mSensorHandler;
@@ -167,13 +169,21 @@ public class SensorManager implements SensorEventListener {
         }
     }
 
-    protected void fireEvent(String event, JSONObject data) {
+    protected void fireEvent(String event, JSONObject data, double newSensorEventTimestamp, SensorEvent sensorEvent) {
         List<SensorManagerEventListener> listeners = mListeners.get(event);
         if (listeners != null) {
             for (int i = 0; i < listeners.size(); i++) {
-                listeners.get(i).onEventData(data.toString(), data, event);
+                SensorManagerEventListener listener = listeners.get(i);
+                if (listener instanceof SensorManagerNativeEventListener) {
+                    ((SensorManagerNativeEventListener)listener).onEventData(data, event, newSensorEventTimestamp, sensorEvent);
+                } else {
+                    listener.onEventData(data.toString(), data, event, newSensorEventTimestamp, sensorEvent);
+                }
             }
         }
+    }
+    protected void fireEvent(String event, JSONObject data, double newSensorEventTimestamp) {
+        fireEvent(event, data, newSensorEventTimestamp,  null);
     }
 
     protected boolean hasEvenListener(String event) {
@@ -834,7 +844,7 @@ public class SensorManager implements SensorEventListener {
                                 data.put(PROPERTY_ACCURACY,
                                         Math.min(currentMagnetometerAccuracy, currentAccelerometerAccuracy));
                                 data.put(PROPERTY_HEADING, bearing);
-                                fireEvent(EVENT_HEADING, data);
+                                fireEvent(EVENT_HEADING, data, newSensorEventTimestamp, event);
                             }
                         }
 
@@ -858,7 +868,7 @@ public class SensorManager implements SensorEventListener {
 
                     if (sensordata != null) {
                         sensordata.put(PROPERTY_TIMESTAMP, newSensorEventTimestamp);
-                        fireEvent(type, sensordata);
+                        fireEvent(type, sensordata, newSensorEventTimestamp, event);
                     }
                     return;
                 }
@@ -947,7 +957,7 @@ public class SensorManager implements SensorEventListener {
                     }
                     lastTimeStamp = newSensorEventTimestamp;
                     mCurrentValues.clear();
-                    fireEvent(EVENT_MOTION, data);
+                    fireEvent(EVENT_MOTION, data, newSensorEventTimestamp, event);
                 }
             } catch (JSONException ignore) {
             }
