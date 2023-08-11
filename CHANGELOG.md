@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/nativescript-community/sensors/compare/v1.3.10...v1.4.0) (2023-08-11)
+
+
+### Bug Fixes
+
+* **android:** native listener is now working ([3b46c6b](https://github.com/nativescript-community/sensors/commit/3b46c6ba93979caaac40037fbe1fc0e9ffc12c5e))
+* **ios:** bearing events were fired as barometer ([c5d5946](https://github.com/nativescript-community/sensors/commit/c5d59469fcd49b19ee03ddcd87eb24174375dba5))
+
+
+### Features
+
+* **android:** support `magnetometer_raw`, `accelerometer_raw` and `gyroscope_raw` ([2434797](https://github.com/nativescript-community/sensors/commit/2434797afe5abcf24efc4d12091daea78a79d2f7))
+
+
+
+
+
 ## [1.3.10](https://github.com/nativescript-community/sensors/compare/v1.3.9...v1.3.10) (2023-08-10)
 
 
