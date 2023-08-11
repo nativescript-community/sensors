@@ -8,8 +8,11 @@ export * from './index.common';
 export const SENSORS = [
     'linearAcceleration',
     'magnetometer',
+    'magnetometer_raw',
     'accelerometer',
+    'accelerometer_raw',
     'gyroscope',
+    'gyroscope_raw',
     'rotation',
     'orientation',
     'motion',

@@ -26,38 +26,41 @@ import org.json.JSONException;
 
 public class SensorManager implements SensorEventListener {
 
-    private static final String PROPERTY_X = "x";
-    private static final String PROPERTY_Y = "y";
-    private static final String PROPERTY_Z = "z";
-    private static final String PROPERTY_HEADING = "heading";
-    private static final String PROPERTY_ACCURACY = "accuracy";
-    private static final String PROPERTY_YAW = "yaw";
-    private static final String PROPERTY_PITCH = "pitch";
-    private static final String PROPERTY_ROLL = "roll";
-    private static final String PROPERTY_GRAVITY = "gravity";
-    private static final String PROPERTY_TIMESTAMP = "timestamp";
-    private static final String PROPERTY_USER = "user";
-    private static final String PROPERTY_RAW = "raw";
+    public static final String PROPERTY_X = "x";
+    public static final String PROPERTY_Y = "y";
+    public static final String PROPERTY_Z = "z";
+    public static final String PROPERTY_HEADING = "heading";
+    public static final String PROPERTY_ACCURACY = "accuracy";
+    public static final String PROPERTY_YAW = "yaw";
+    public static final String PROPERTY_PITCH = "pitch";
+    public static final String PROPERTY_ROLL = "roll";
+    public static final String PROPERTY_GRAVITY = "gravity";
+    public static final String PROPERTY_TIMESTAMP = "timestamp";
+    public static final String PROPERTY_USER = "user";
+    public static final String PROPERTY_RAW = "raw";
 
-    private static final String EVENT_LINEAR_ACCELERATION = "linearAcceleration";
-    private static final String EVENT_ACC = "accelerometer";
-    private static final String EVENT_GYRO = "gyroscope";
-    private static final String EVENT_ORIENTATION = "orientation";
-    private static final String EVENT_HEADING = "heading";
-    private static final String EVENT_MAG = "magnetometer";
-    private static final String EVENT_MOTION = "motion";
-    private static final String EVENT_ROTATION = "rotation";
-    private static final String EVENT_PRESSURE = "barometer";
-    private static final String EVENT_PROXIMITY = "proximity";
-    private static final String EVENT_STATIONARY_DETECT = "stationary";
-    private static final String EVENT_STEP_COUNTER = "stepCounter";
-    private static final String EVENT_STEP_DETECTOR = "stepDetector";
-    private static final String EVENT_TEMPERATURE = "temperature";
-    private static final String EVENT_HEART_BEAT = "heartBeat";
-    private static final String EVENT_HEART_RATE = "heartRate";
-    private static final String EVENT_HUMIDITY = "humidity";
-    private static final String EVENT_LIGHT = "light";
-    private static final String EVENT_GRAVITY = "gravity";
+    public static final String EVENT_LINEAR_ACCELERATION = "linearAcceleration";
+    public static final String EVENT_ACC = "accelerometer";
+    public static final String EVENT_ACC_RAW = "accelerometer_raw";
+    public static final String EVENT_GYRO = "gyroscope";
+    public static final String EVENT_GYRO_RAW = "gyroscope_raw";
+    public static final String EVENT_ORIENTATION = "orientation";
+    public static final String EVENT_HEADING = "heading";
+    public static final String EVENT_MAG = "magnetometer";
+    public static final String EVENT_MAG_RAW = "magnetometer_raw";
+    public static final String EVENT_MOTION = "motion";
+    public static final String EVENT_ROTATION = "rotation";
+    public static final String EVENT_PRESSURE = "barometer";
+    public static final String EVENT_PROXIMITY = "proximity";
+    public static final String EVENT_STATIONARY_DETECT = "stationary";
+    public static final String EVENT_STEP_COUNTER = "stepCounter";
+    public static final String EVENT_STEP_DETECTOR = "stepDetector";
+    public static final String EVENT_TEMPERATURE = "temperature";
+    public static final String EVENT_HEART_BEAT = "heartBeat";
+    public static final String EVENT_HEART_RATE = "heartRate";
+    public static final String EVENT_HUMIDITY = "humidity";
+    public static final String EVENT_LIGHT = "light";
+    public static final String EVENT_GRAVITY = "gravity";
 
     public static List<String> POSSIBLE_MOTION_SENSORS = Arrays.asList(EVENT_ACC, EVENT_GYRO, EVENT_ORIENTATION,
             EVENT_MAG, EVENT_ROTATION);
@@ -232,11 +235,20 @@ public class SensorManager implements SensorEventListener {
             case EVENT_ACC:
                 result.add(Sensor.TYPE_ACCELEROMETER);
                 break;
+            case EVENT_ACC_RAW:
+                result.add(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
+                break;
             case EVENT_GYRO:
                 result.add(Sensor.TYPE_GYROSCOPE);
                 break;
+            case EVENT_GYRO_RAW:
+                result.add(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+                break;
             case EVENT_MAG:
                 result.add(Sensor.TYPE_MAGNETIC_FIELD);
+                break;
+            case EVENT_MAG_RAW:
+                result.add(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
                 break;
             case EVENT_ROTATION:
                 result.add(Sensor.TYPE_ROTATION_VECTOR);
@@ -669,6 +681,8 @@ public class SensorManager implements SensorEventListener {
         switch (type) {
             case Sensor.TYPE_ACCELEROMETER:
                 return EVENT_ACC;
+            case Sensor.TYPE_ACCELEROMETER_UNCALIBRATED:
+                return EVENT_ACC_RAW;
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 return EVENT_LINEAR_ACCELERATION;
             case Sensor.TYPE_GAME_ROTATION_VECTOR:
@@ -676,8 +690,12 @@ public class SensorManager implements SensorEventListener {
                 return EVENT_ROTATION;
             case Sensor.TYPE_MAGNETIC_FIELD:
                 return EVENT_MAG;
+            case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
+                return EVENT_MAG_RAW;
             case Sensor.TYPE_GYROSCOPE:
                 return EVENT_GYRO;
+            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                return EVENT_GYRO_RAW;
             case Sensor.TYPE_ORIENTATION:
                 return EVENT_ORIENTATION;
             case Sensor.TYPE_PRESSURE:
