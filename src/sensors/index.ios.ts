@@ -28,7 +28,7 @@ let headingManager: CLLocationManager;
 class LocationHeadingListenerImpl extends NSObject implements CLLocationManagerDelegate {
     public static ObjCProtocols = [CLLocationManagerDelegate];
     public static new() {
-        const listener = LocationHeadingListenerImpl.new();
+        const listener = <LocationHeadingListenerImpl>LocationHeadingListenerImpl.alloc().init();
         return listener;
     }
     public locationManagerDidUpdateHeading?(manager: CLLocationManager, newHeading: CLHeading) {
@@ -319,6 +319,8 @@ export function startListeningForSensor(
                             }
                             headingManager.headingFilter = options?.headingFilter || 5;
                             headingManager.startUpdatingHeading();
+                            listeners[sensor] = listeners[sensor] || [];
+                            listeners[sensor].push(listener);
                             return true;
                         }
                         return false;
