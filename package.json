@@ -15,7 +15,7 @@
         "plugin.watch.android": "npm i && npm-watch build.android",
         "plugin.watch.ios": "npm i && npm-watch build.ios",
         "plugin.watch": "npm run plugin.watch.tsc & npm run plugin.watch.android & npm run plugin.watch.ios",
-        "publish": "npm run clean && npm run build.all && npm run readme && npm run doc && lerna publish --no-private --create-release=github --force-publish",
+        "publish": "npm run setup && npm run clean && npm run build.all && npm run readme && npm run doc && npm run commit_readme_doc_changes && lerna publish",
         "sync": "node ./tools/sync.js",
         "commitmsg": "commitlint -e $GIT_PARAMS",
         "build.all": "npm run build",
@@ -29,7 +29,8 @@
         "setup": "npm run submodules && ts-patch install",
         "start": "./node_modules/.bin/ntl -A -s 15 -o",
         "submodules": "git submodule update --init",
-        "update": "node ./tools/update.js"
+        "update": "node ./tools/update.js",
+        "commit_readme_doc_changes": "git add docs/** *.md ; git commit -m \"readme/doc\" ; echo \"commit readme doc done\""
     },
     "keywords": [
         "NativeScript",
@@ -78,6 +79,7 @@
     "workspaces": [
         "packages/*",
         "demo-vue",
+        "demo-vue3",
         "demo-ng",
         "demo-svelte",
         "demo-react",
